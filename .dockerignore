@@ -1,0 +1,11 @@
+build
+.gradle
+.idea
+*.iml
+docs
+README.local.md
+.env
+.env.*
+*.key
+*.pem
+src/main/resources/application*.yml
