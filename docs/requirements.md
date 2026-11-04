@@ -28,12 +28,30 @@
 7. [x] OCI 콘솔 포트 80 · 443 열기 (NSG)
 8. [x] HTTPS: 서버에서 `certbot --nginx` (Let's Encrypt, 무료 · 자동 갱신)
 9. [x] Dockerfile · 서버에서 이미지 만들기 (`docker build`)
-10. [ ] DB 연결: 앱과 DB 컨테이너를 같은 Docker 네트워크로. 운영 DB `love` (개발은 `love_local` — DB 로 나눈다)
-11. [ ] 운영 설정(`application-prod.yml`)
-    - [ ] datasource 주소 `honeysalt-postgres:5432`
-    - [ ] `server.forward-headers-strategy: framework` (없으면 OAuth 콜백이 `http://`)
-    - [ ] Actuator 는 `/actuator/health` 만 연다 (`SecurityConfig` 에서 health 만 허용)
-12. [ ] 앱 실행: Docker 컨테이너로. 설정 파일은 마운트, 마스터 키 `JASYPT_ENCRYPTOR_PASSWORD` 는 서버 `.env`
-13. [ ] nginx: `api.honeysaltlove.com` → 앱 `localhost:8080`
-14. [ ] **완료 기준**: `https://api.honeysaltlove.com/actuator/health` → `UP`
-15. [ ] (나중) DB 포트 `0.0.0.0:5432` → `127.0.0.1` · firewalld 5432 규칙 확인
+10. [x] DB 연결: 앱과 DB 컨테이너를 같은 Docker 네트워크로. 운영 DB `love` (개발은 `love_local` — DB 로 나눈다)
+11. [x] 운영 설정(`application-prod.yml`)
+    - [x] datasource 주소 `honeysalt-postgres:5432`
+    - [x] `server.forward-headers-strategy: framework` (없으면 OAuth 콜백이 `http://`)
+    - [x] Actuator 는 `/actuator/health` 만 연다 (`SecurityConfig` 에서 health 만 허용)
+12. [x] 서버 앱 실행: Docker 컨테이너로. 설정 파일은 마운트, 마스터 키 `JASYPT_ENCRYPTOR_PASSWORD` 는 서버 `.env`
+13. [x] nginx: `api.honeysaltlove.com` → 앱 `localhost:8080`
+14. [x] **완료 기준**: `https://api.honeysaltlove.com/actuator/health` → `UP`
+15. [x] (나중) DB 포트 `0.0.0.0:5432` → `127.0.0.1` · firewalld 5432 규칙 확인
+
+---
+
+## 2. 엔티티 · Flyway · 기본 데이터 (11/5~)
+
+설계서 3절(ERD · 테이블 정의 · 제약조건 · 참고사항)을 보고 만든다. 묶음마다 엔티티 + 마이그레이션 + 테스트.
+
+1. [ ] Flyway 붙이기: `flyway-core` · `flyway-database-postgresql` · `ddl-auto: validate` (local · prod) — 테이블은 Flyway 만 만든다
+2. [ ] 공통: `BaseTimeEntity`(등록일 · 수정일) · `BaseCreatedEntity`(등록일 — 로그 테이블만) · JPA Auditing
+3. [ ] 회원: `member` · `member_nickname_history` · `terms` · `member_consent`
+4. [ ] 주요기능: `worry` · `thought_tip` · `thought_tip_url` · `activity_tip` · `mission` · `activity` · `activity_url` · `schedule` · `schedule_activity`
+5. [ ] 태그: `tag` · `member_tag` · `worry_tag` · `thought_tip_tag` · `schedule_tag` · `activity_tag` — 연결 엔티티 없이 `@JoinTable`
+6. [ ] 반응: `comment` · `likes`
+7. [ ] 앱 · 기타: `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 연관 없이 id 숫자만, 추가만
+8. [ ] 엔티티 규칙 확인: 연관 모두 `LAZY` · enum `@Enumerated(STRING)` · setter 없이 메서드로만 (`hide("AI: 광고")`)
+9. [ ] 기본 데이터: `mission` · `tag` · `terms`
+10. [ ] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과
+11. [ ] 서버 `love` 에 적용 (배포하면 Flyway 가 올린다) → `https://api.honeysaltlove.com/actuator/health` → `UP`
