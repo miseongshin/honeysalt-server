@@ -154,6 +154,10 @@ table.prog tr.doing td.ko { color: var(--honey); }
 table.prog td.n { white-space: normal !important; min-width: 11em; }
 .cols:has(> #prog) { max-height: none !important; overflow-x: auto !important; }
 table.prog td.st { white-space: nowrap; }
+table.prog .pace { font-size: 12px; font-weight: 700; margin-top: 3px; }
+table.prog .pace.ahead { color: #2f7a4a; }
+table.prog .pace.behind { color: #c0392b; }
+table.prog .pace.on { color: var(--muted); }
 table.prog td.st span { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: #eee9df; color: #6b655b; }
 table.prog td.st[data-s="진행 중"] span { background: var(--honey); color: #fff; }
 table.prog td.st[data-s="완료"] span { background: #2f7a4a; color: #fff; }
@@ -281,113 +285,109 @@ section dl dd, section dl dt { min-width: 0; overflow-wrap: anywhere; word-break
     </ul>
     <div class="diagram"><pre class="mermaid">
 erDiagram
-  member ||--o{ thought_tip : "생각꿀팁 등록"
-  thought_tip ||--o{ thought_tip_url : "링크를 붙인다"
-  worry |o--o{ thought_tip : "고민에 답한다 (worry_id)"
-  member ||--o{ worry : "고민 등록"
-  worry ||--o{ activity_tip : "활동꿀팁 · 도움이 된 활동"
-  activity ||--o{ activity_tip : "고민에 추천된다"
-  activity ||--o{ activity_url : "활동에 영상·링크를 붙인다"
-  activity }o--o| mission : "미션에 속한다"
-  member |o--o{ activity : "활동 등록"
-  activity ||--o{ schedule_activity : "스케줄에 들어간다"
-  schedule ||--o{ schedule_activity : "활동을 넣는다"
-  member ||--o{ schedule : "스케줄 등록"
-
+  member ||--o{ honey_worry : "고민 등록"
+  member ||--o{ honey_thought_tip : "생각꿀팁 등록"
+  honey_worry ||--o{ honey_thought_tip : "고민에 답한다 (worry_id)"
+  honey_thought_tip ||--o{ honey_thought_tip_url : "링크를 붙인다"
+  honey_worry ||--o{ honey_activity_tip : "활동꿀팁 · 도움이 된 활동"
+  honey_activity ||--o{ honey_activity_tip : "고민에 추천된다"
+  honey_activity ||--o{ honey_activity_url : "영상·링크를 붙인다"
+  member |o--o{ honey_activity : "활동 등록"
+  honey_activity ||--o{ honey_schedule_activity : "스케줄에 들어간다"
+  honey_schedule ||--o{ honey_schedule_activity : "활동을 넣는다"
+  member ||--o{ honey_schedule : "스케줄 등록"
   member["member · 회원"] {
     bigint member_id PK "기본키"
   }
-  worry["worry · 고민"] {
+  honey_worry["honey_worry · 고민"] {
     bigint worry_id PK "기본키"
     bigint member_id FK "NOT NULL"
+    varchar worry_text "고민 · 500 (한중일 200 · 그 외 400)"
     varchar lang "언어 · 한국어(ko) 영어(en) …"
-    varchar text "고민"
     boolean is_anonymous "익명 여부"
+    boolean show_tags "글에 내 태그 보이기"
     varchar status "공개(PUBLIC) · 숨김(HIDDEN)"
     timestamptz hidden_at "숨긴 때"
     varchar hidden_reason "숨긴 이유 (예: AI: 광고)"
     int like_count "좋아요 수"
     int answer_count "답 수 · 답을 기다리는 고민 = 0"
-    boolean show_tags "등록할 때 선택 · 글에 내 태그 보이기"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
   }
-  thought_tip["thought_tip · 생각꿀팁"] {
+  honey_thought_tip["honey_thought_tip · 생각꿀팁"] {
     bigint thought_tip_id PK "기본키"
     bigint member_id FK "쓴 사람"
-    bigint worry_id FK "답한 고민 · 없으면 NULL"
-    text body "도움이 된 생각"
+    bigint worry_id FK "답한 고민 · NOT NULL"
+    varchar thought_tip_text "도움이 된 생각 · 500 (한중일 200 · 그 외 400)"
     varchar lang "언어"
+    boolean show_tags "글에 내 태그 보이기"
     varchar status "공개(PUBLIC) · 숨김(HIDDEN)"
     timestamptz hidden_at "숨긴 때"
-    varchar hidden_reason "숨긴 이유 (예: AI: 광고)"
+    varchar hidden_reason "숨긴 이유"
     int like_count "좋아요 수"
-    boolean show_tags "등록할 때 선택 · 글에 내 태그 보이기"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
   }
-  thought_tip_url["thought_tip_url · 참고 링크"] {
-    bigint link_id PK "기본키"
+  honey_thought_tip_url["honey_thought_tip_url · 참고 링크"] {
+    bigint thought_tip_url_id PK "기본키"
     bigint thought_tip_id FK "생각꿀팁"
+    int sort "순서"
     varchar url "주소 · 유튜브면 바로 재생"
     timestamptz created_at "등록일"
-    timestamptz updated_at "수정일"
   }
-  schedule["schedule · 꿀방울 스케줄"] {
-    bigint schedule_id PK "기본키"
-    bigint member_id FK "쓴 사람"
-    varchar title "스케줄 이름"
-    text description "설명 · 선택"
-    varchar lang "언어"
-    varchar status "공개(PUBLIC) · 숨김(HIDDEN)"
-    timestamptz hidden_at "숨긴 때"
-    varchar hidden_reason "숨긴 이유 (예: AI: 광고)"
-    int like_count "좋아요 수"
-    int send_count "사용자 수"
-    boolean show_tags "등록할 때 선택 · 글에 내 태그 보이기"
-    timestamptz created_at "등록일"
-    timestamptz updated_at "수정일"
-  }
-  activity_tip["activity_tip · 활동꿀팁"] {
+  honey_activity_tip["honey_activity_tip · 활동꿀팁"] {
     bigint activity_tip_id PK "기본키"
     bigint worry_id FK "고민"
     bigint activity_id FK "활동"
     bigint member_id FK "추천한 사람"
     timestamptz created_at "등록일"
-    timestamptz updated_at "수정일"
   }
-  schedule_activity["schedule_activity · 스케줄 구성"] {
-    bigint schedule_id PK, FK "기본키"
-    bigint activity_id PK, FK "기본키"
-    varchar days "요일 · 월0 화1 수2 목3 금4 토5 일6 · 예 0,3 = 월·목 · 비우면 매일"
-    timestamptz created_at "등록일"
-    timestamptz updated_at "수정일"
-  }
-  mission["mission · 미션"] {
-    varchar code PK "기본키"
-    boolean fixed "고정"
-    timestamptz created_at "등록일"
-    timestamptz updated_at "수정일"
-  }
-  activity["activity · 활동"] {
+  honey_activity["honey_activity · 활동"] {
     bigint activity_id PK "기본키"
-    varchar mission_code FK "미션"
-    varchar name "이름"
+    int mission_no "미션 1~7 (enum) · 없으면 NULL"
+    varchar activity_key "기본 활동 이름표 · 앱과 맞춤"
+    boolean is_default "기본 활동"
+    varchar name "이름 · 사용자 활동만"
+    varchar lang "원문 언어 · 사용자 활동만"
     text description "설명"
-    bigint created_by FK "등록한 사람"
+    bigint created_by FK "등록한 사람 · 기본 활동은 NULL"
+    varchar source "DEFAULT · WEB · APP"
+    varchar app_local_key "앱에서 만든 활동 번호"
     varchar status "공개(PUBLIC) · 숨김(HIDDEN)"
     timestamptz hidden_at "숨긴 때"
-    varchar hidden_reason "숨긴 이유 (예: AI: 광고)"
+    varchar hidden_reason "숨긴 이유"
     int use_count "사용자 수"
     int done_count "활동 수"
     int like_count "좋아요 수"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
   }
-  activity_url["activity_url · 활동 영상·글"] {
+  honey_activity_url["honey_activity_url · 활동 영상·글"] {
     bigint activity_url_id PK "기본키"
     bigint activity_id FK "활동"
+    int sort "순서"
     varchar url "주소"
+    timestamptz created_at "등록일"
+  }
+  honey_schedule["honey_schedule · 꿀방울 스케줄"] {
+    bigint schedule_id PK "기본키"
+    bigint member_id FK "쓴 사람"
+    varchar schedule_title "스케줄 이름"
+    varchar schedule_text "설명 · 500 (한중일 200 · 그 외 400) · 선택"
+    varchar lang "언어"
+    boolean show_tags "글에 내 태그 보이기"
+    varchar status "공개(PUBLIC) · 숨김(HIDDEN)"
+    timestamptz hidden_at "숨긴 때"
+    varchar hidden_reason "숨긴 이유"
+    int like_count "좋아요 수"
+    int send_count "사용자 수"
+    timestamptz created_at "등록일"
+    timestamptz updated_at "수정일"
+  }
+  honey_schedule_activity["honey_schedule_activity · 스케줄 구성"] {
+    bigint schedule_id PK, FK "기본키"
+    bigint activity_id PK, FK "기본키"
+    varchar days "요일 · 월0 화1 … 일6 · 예 0,3 = 월·목 · 비우면 매일"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
   }
@@ -400,15 +400,15 @@ erDiagram
     <div class="diagram"><pre class="mermaid">
 erDiagram
   tag ||--o{ member_tag : "회원이 고른다"
-  tag ||--o{ worry_tag : "고민 등록"
-  tag ||--o{ thought_tip_tag : "생각꿀팁 등록"
-  tag ||--o{ schedule_tag : "스케줄 등록"
-  tag ||--o{ activity_tag : "활동 등록"
+  tag ||--o{ honey_worry_tag : "고민 등록"
+  tag ||--o{ honey_thought_tip_tag : "생각꿀팁 등록"
+  tag ||--o{ honey_schedule_tag : "스케줄 등록"
+  tag ||--o{ honey_activity_tag : "활동 등록"
   member_tag }o--|| member : "회원"
-  worry_tag }o--|| worry : "고민"
-  thought_tip_tag }o--|| thought_tip : "생각꿀팁"
-  schedule_tag }o--|| schedule : "스케줄"
-  activity_tag }o--|| activity : "활동"
+  honey_worry_tag }o--|| honey_worry : "고민"
+  honey_thought_tip_tag }o--|| honey_thought_tip : "생각꿀팁"
+  honey_schedule_tag }o--|| honey_schedule : "스케줄"
+  honey_activity_tag }o--|| honey_activity : "활동"
 
   tag["tag · 태그"] {
     bigint tag_id PK "기본키"
@@ -422,19 +422,19 @@ erDiagram
     bigint member_id PK, FK "회원"
     bigint tag_id PK, FK "태그"
   }
-  worry_tag["worry_tag · 고민 태그"] {
+  honey_worry_tag["honey_worry_tag · 고민 태그"] {
     bigint worry_id PK, FK "고민"
     bigint tag_id PK, FK "태그"
   }
-  thought_tip_tag["thought_tip_tag · 생각꿀팁 태그"] {
+  honey_thought_tip_tag["honey_thought_tip_tag · 생각꿀팁 태그"] {
     bigint thought_tip_id PK, FK "생각꿀팁"
     bigint tag_id PK, FK "태그"
   }
-  schedule_tag["schedule_tag · 스케줄 태그"] {
+  honey_schedule_tag["honey_schedule_tag · 스케줄 태그"] {
     bigint schedule_id PK, FK "스케줄"
     bigint tag_id PK, FK "태그"
   }
-  activity_tag["activity_tag · 활동 태그"] {
+  honey_activity_tag["honey_activity_tag · 활동 태그"] {
     bigint activity_id PK, FK "활동"
     bigint tag_id PK, FK "태그"
   }
@@ -444,13 +444,15 @@ erDiagram
     <ul class="kv legendline">
       <li>댓글은 활동, 꿀방울 스케줄 상세화면에서 사용한다.</li>
       <li>좋아요는 고민 · 생각꿀팁 · 스케줄 · 활동 네 곳에 누를 수 있다.</li>
+      <li>신고는 고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글에 할 수 있다. 같은 글에 3명 이상 신고하면 관리자에게 메일을 보낸다.</li>
     </ul>
     <div class="diagram"><pre class="mermaid">
 erDiagram
-  activity |o--o{ comment : "활동 댓글"
-  schedule |o--o{ comment : "스케줄 댓글"
+  honey_activity |o--o{ comment : "활동 댓글"
+  honey_schedule |o--o{ comment : "스케줄 댓글"
   member ||--o{ comment : "댓글을 쓴다"
   member ||--o{ likes : "좋아요를 누른다"
+  member ||--o{ report : "신고한다"
 
   comment["comment · 댓글"] {
     bigint comment_id PK "기본키"
@@ -467,6 +469,16 @@ erDiagram
     bigint target_id "대상 번호"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
+  }
+  report["report · 신고"] {
+    bigint report_id PK "기본키"
+    bigint member_id FK "신고한 회원"
+    varchar target_type "고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글"
+    bigint target_id "대상 번호"
+    varchar reason "광고 · 욕설 · 부적절 · 기타"
+    varchar report_text "기타일 때 설명 · 선택"
+    timestamptz handled_at "관리자가 처리한 때 · NULL 이면 대기"
+    timestamptz created_at "신고한 때"
   }
 </pre></div>
 
@@ -716,16 +728,16 @@ Authorization: Bearer &lt;앱 키&gt;
     <h3 id="nf2" style="margin:12px 0 6px;">성능·페이징</h3>
     <ul class="plain" style="margin-left:20px;">
       <li><b>목록</b>: OFFSET 대신 커서(마지막으로 본 id 이후)로 가져온다.</li>
-      <li><b>색인</b>: worry (status, answer_count, created_at) · thought_tip (status, created_at) · thought_tip (worry_id) · schedule (status, created_at) · likes 는 (target_type, target_id) · 태그 연결 테이블은 PK (대상_id, tag_id) + 역색인 (tag_id, 대상_id).</li>
+      <li><b>색인</b>: honey_worry (status, answer_count, created_at) · honey_thought_tip (status, created_at) · honey_thought_tip (worry_id) · honey_schedule (status, created_at) · likes 는 (target_type, target_id) · 태그 연결 테이블은 PK (대상_id, tag_id) + 역색인 (tag_id, 대상_id).</li>
       <li><b>N+1</b>: 목록은 fetch join · @EntityGraph · batch_fetch_size.</li>
     </ul>
     <h3 id="nf3" style="margin:12px 0 6px;">대용량 기준</h3>
     <ul class="plain" style="margin-left:20px;">
-      <li><b>테이블 나누기</b>: 고민(worry) · 생각꿀팁(thought_tip) · 스케줄(schedule)을 따로 둔다. 화면에서 쓰는 칸이 달라서다. 생각꿀팁만 worry_id FK 로 고민을 가리킨다.</li>
+      <li><b>테이블 나누기</b>: 고민(honey_worry) · 생각꿀팁(honey_thought_tip) · 스케줄(honey_schedule)을 따로 둔다. 화면에서 쓰는 칸이 달라서다. 생각꿀팁만 worry_id FK 로 고민을 가리킨다.</li>
       <li><b>숫자</b>: 좋아요 · 사용자 수 · 활동 수 · 태그 쓴 횟수는 누를 때 올리지 않는다. 원본(likes · app_done_log · cart · ○○_tag)에 쌓기만 하고, @Scheduled 스케줄러가 새로 쌓인 것만 세어 *_count 에 한 번에 더한다(좋아요 1분 · 나머지 1시간). 인기 글에 몰려도 줄 잠금이 없다.</li>
-      <li><b>활동완료</b>: app_done_log 은 가장 빨리 커진다. 월별 파티션 · '사용자 N명 · 활동 N회'는 activity 의 use_count · done_count 를 읽는다.</li>
-      <li><b>많이 찾는 상황</b>: worry_tag 를 매번 GROUP BY 하지 않고 몇 분마다 계산해 저장한다.</li>
-      <li><b>보내기</b>: cart 는 앱이 가져갈 때(ack) schedule.send_count 를 1 올리고, 가져간 줄은 다음 날 지운다.</li>
+      <li><b>활동완료</b>: app_done_log 은 가장 빨리 커진다. 월별 파티션 · '사용자 N명 · 활동 N회'는 honey_activity 의 use_count · done_count 를 읽는다.</li>
+      <li><b>많이 찾는 상황</b>: honey_worry_tag 를 매번 GROUP BY 하지 않고 몇 분마다 계산해 저장한다.</li>
+      <li><b>보내기</b>: cart 는 앱이 가져갈 때(ack) honey_schedule.send_count 를 1 올리고, 가져간 줄은 다음 날 지운다.</li>
     </ul>
   </section>
 
@@ -758,7 +770,7 @@ Authorization: Bearer &lt;앱 키&gt;
       <tr data-id="appact"><td class="ko">앱 활동 받기</td><td class="n">활동 완료(/app/activities) · 도움됨 on/off(/app/helpful) · 하루 한 번 중복 막기</td><td>3~5</td><td>본인</td><td class="st" id="st-appact">예정</td><td><input type="date" id="start-appact" aria-label="앱 활동 받기 시작"></td><td><input type="date" id="end-appact" aria-label="앱 활동 받기 완료"></td></tr>
       <tr data-id="e2e"><td class="ko">전체 테스트</td><td class="n">로그인 → 글쓰기 → 바구니 → 앱 받기 · PC · 모바일</td><td>3~5</td><td>본인</td><td class="st" id="st-e2e">예정</td><td><input type="date" id="start-e2e" aria-label="전체 테스트 시작"></td><td><input type="date" id="end-e2e" aria-label="전체 테스트 완료"></td></tr>
       <tr data-id="folio"><td class="ko">포트폴리오</td><td class="n">README</td><td>4~6</td><td>본인</td><td class="st" id="st-folio">예정</td><td><input type="date" id="start-folio" aria-label="포트폴리오 시작"></td><td><input type="date" id="end-folio" aria-label="포트폴리오 완료"></td></tr>
-      <tr class="total"><td class="ko">2차 합계</td><td class="ko">한 세트</td><td class="n" id="span-1"></td><td>66~102</td><td colspan="4"><b>17~26일 · 약 4~6주</b></td></tr>
+      <tr class="total"><td class="ko">2차 합계</td><td class="ko">한 세트</td><td class="n" id="span-1"></td><td>66~102</td><td colspan="4" id="total-1"><b>17~26일 · 약 4~6주</b></td></tr>
       <tr class="total"><td class="ko">3차</td><td class="ko">다국어</td><td class="n" colspan="6">화면 글자 · 번역 테이블 · AI 번역 · 약관 고치기 · 2차 끝난 뒤 따로 계획</td></tr>
     </table></div>
   </section>
@@ -816,14 +828,14 @@ const G = [
   ['member_tag', '회원 태그', '회원이 고른 맞춤설정 태그 · 한 줄 = 태그 하나', [
     ['회원','member_id','member FK','key link'],
     ['태그','tag_id','tag FK','key link']],
-   '추천 = 내 member_tag 와 activity_tag 가 겹치는 수가 많은 순']
+   '추천 = 내 member_tag 와 honey_activity_tag 가 겹치는 수가 많은 순']
  ]],
  ['글', [
-  ['worry', '고민', '', [
+  ['honey_worry', '고민', '', [
     ['번호','worry_id','자동 증가 번호','key'],
     ['쓴 사람','member_id','고민을 쓴 회원 · NOT NULL','link'],
     ['쓴 언어','lang','한국어(ko) · 영어(en) · 일본어(ja) … · 2차는 한국어(ko)만'],
-    ['고민','text','고민 한 줄 · 예: 잠이 안 올 때'],
+    ['고민','worry_text','고민 한 줄 · 쓸 때 한 · 중 · 일 200자 · 그 외 400자 (칸은 500)'],
     ['익명 여부','is_anonymous','true = 익명 · 기본 true'],
     ['상태','status','공개(PUBLIC) · 숨김(HIDDEN) · 등록 시 바로 공개'],
     ['숨긴 때','hidden_at','숨긴 날짜와 시각','opt'],
@@ -833,11 +845,11 @@ const G = [
     ['쓴 때','created_at','올린 때 · 목록 정렬 기준'],
     ['내 태그 보이기','show_tags','등록할 때 선택 · 체크하면 글 옆에 MBTI 등 내 태그를 보여 줌']],
    '색인 (status, answer_count, created_at) · 지혜나눔 > 고민 > 답을 기다리는 고민'],
-  ['thought_tip', '생각꿀팁', '', [
+  ['honey_thought_tip', '생각꿀팁', '', [
     ['번호','thought_tip_id','자동 증가 번호','key'],
     ['쓴 사람','member_id','NOT NULL','link'],
-    ['답한 고민','worry_id','고민 없이 쓰면 NULL','link opt'],
-    ['생각','body','도움이 된 생각'],
+    ['답한 고민','worry_id','생각꿀팁은 고민에 딸린 글 · NOT NULL','link'],
+    ['생각','thought_tip_text','도움이 된 생각 · 쓸 때 한 · 중 · 일 200자 · 그 외 400자 (칸은 500)'],
     ['쓴 언어','lang','2차는 한국어(ko)만'],
     ['상태','status','공개(PUBLIC) · 숨김(HIDDEN) · 등록 시 바로 공개'],
     ['숨긴 때','hidden_at','숨긴 날짜와 시각','opt'],
@@ -845,12 +857,12 @@ const G = [
     ['좋아요 수','like_count','스케줄러가 1분마다 like 를 세어 더함'],
     ['쓴 때','created_at','목록 정렬 기준'],
     ['내 태그 보이기','show_tags','등록할 때 선택 · 체크하면 글 옆에 MBTI 등 내 태그를 보여 줌']],
-   '색인 (status, created_at) · 지혜나눔 > 생각꿀팁 / 색인 (worry_id) · 지혜나눔 > 고민 > 고민 상세'],
-  ['schedule', '꿀방울 스케줄', '활동 묶음. 고민과 연결하지 않는다', [
+   '색인 (status, created_at) · 지혜나눔 > 생각꿀팁 / 색인 (worry_id) · 지혜나눔 > 고민 > 고민 상세 · 좋아요를 받으면 고치지 않는다 · 고민이 숨겨지면 함께 안 보인다(조회할 때 고민 상태도 본다)'],
+  ['honey_schedule', '꿀방울 스케줄', '활동 묶음. 고민과 연결하지 않는다', [
     ['번호','schedule_id','자동 증가 번호','key'],
     ['쓴 사람','member_id','NOT NULL','link'],
-    ['이름','title','스케줄 이름'],
-    ['설명','description','누구에게, 언제 좋은지','opt'],
+    ['이름','schedule_title','스케줄 이름'],
+    ['설명','schedule_text','누구에게, 언제 좋은지 · 쓸 때 한 · 중 · 일 200자 · 그 외 400자 (칸은 500)','opt'],
     ['쓴 언어','lang','2차는 한국어(ko)만'],
     ['상태','status','공개(PUBLIC) · 숨김(HIDDEN)'],
     ['숨긴 때','hidden_at','숨긴 날짜와 시각','opt'],
@@ -860,28 +872,28 @@ const G = [
     ['쓴 때','created_at','목록 정렬 기준'],
     ['내 태그 보이기','show_tags','등록할 때 선택 · 체크하면 글 옆에 MBTI 등 내 태그를 보여 줌']],
    '색인 (status, created_at) · 지혜나눔 > 꿀방울 스케줄'],
- ['worry_tag', '고민 태그', '고민에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
+ ['honey_worry_tag', '고민 태그', '고민에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
     ['고민','worry_id','고민 FK','key link'],
     ['태그','tag_id','tag FK','key link']],
    '역색인 (tag_id, worry_id) · 지혜나눔 > 고민 > #태그'],
- ['thought_tip_tag', '생각꿀팁 태그', '생각꿀팁에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
+ ['honey_thought_tip_tag', '생각꿀팁 태그', '생각꿀팁에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
     ['생각꿀팁','thought_tip_id','생각꿀팁 FK','key link'],
     ['태그','tag_id','tag FK','key link']],
    '역색인 (tag_id, thought_tip_id) · 지혜나눔 > 생각꿀팁 > #태그'],
- ['schedule_tag', '스케줄 태그', '스케줄에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
+ ['honey_schedule_tag', '스케줄 태그', '스케줄에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
     ['스케줄','schedule_id','스케줄 FK','key link'],
     ['태그','tag_id','tag FK','key link']],
    '역색인 (tag_id, schedule_id) · 지혜나눔 > 꿀방울 스케줄 > #태그'],
- ['activity_tag', '활동 태그', '활동에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
+ ['honey_activity_tag', '활동 태그', '활동에 붙은 태그 · 한 줄 = 태그 하나 · 대용량이라 대상별로 나눈다', [
     ['활동','activity_id','활동 FK','key link'],
     ['태그','tag_id','tag FK','key link']],
    '역색인 (tag_id, activity_id) · 지혜나눔 > 활동꿀팁 > #태그'],
-  ['thought_tip_url', '참고 링크', '생각꿀팁에 여러 개. 유튜브는 화면에서 바로 재생', [
-    ['번호','link_id','자동 증가 번호','key'],
+  ['honey_thought_tip_url', '참고 링크', '생각꿀팁에 여러 개 · 고치지 않고 지우고 다시 넣는다. 유튜브는 화면에서 바로 재생', [
+    ['번호','thought_tip_url_id','자동 증가 번호','key'],
     ['생각꿀팁','thought_tip_id','링크가 붙은 생각꿀팁','link'],
     ['순서','sort','화면에 보이는 순서 · 0부터'],
     ['주소','url','참고 링크 주소 · 유튜브면 화면에서 바로 재생']]],
-  ['schedule_activity', '스케줄 구성', '스케줄에 고른 활동 한 줄씩', [
+  ['honey_schedule_activity', '스케줄 구성', '스케줄에 고른 활동 한 줄씩', [
     ['스케줄','schedule_id','꿀방울 스케줄','key link'],
     ['활동','activity_id','스케줄에 넣은 활동','key link'],
     ['요일','days','월(0) 화(1) 수(2) 목(3) 금(4) 토(5) 일(6) · 쉼표로 여러 개 · 예: "0,3" = 월·목 · 비우면 매일','opt']]]
@@ -894,6 +906,16 @@ const G = [
     ['대상 번호','target_id','FK 없음 · 대상 지울 때 서비스에서 같이 지움'],
     ['누른 때','created_at','누른 때']],
    'UQ (member_id, target_type, target_id) · 수는 스케줄러가 1분마다 세어 각 대상의 like_count 에 더한다'],
+  ['report', '신고', '고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글을 한 테이블에서. 한 사람이 한 대상에 한 번 · 고치지 않음', [
+    ['번호','report_id','자동 증가 번호','key'],
+    ['회원','member_id','신고한 회원','link'],
+    ['대상 종류','target_type','고민(WORRY) · 생각꿀팁(THOUGHT_TIP) · 스케줄(SCHEDULE) · 활동(ACTIVITY) · 댓글(COMMENT)'],
+    ['대상 번호','target_id','FK 없음'],
+    ['이유','reason','광고(AD) · 욕설(ABUSE) · 부적절(INAPPROPRIATE) · 기타(ETC)'],
+    ['설명','report_text','기타일 때 짧은 설명','opt'],
+    ['처리한 때','handled_at','관리자가 확인한 때 · 비어 있으면 대기','opt'],
+    ['신고한 때','created_at','신고한 때']],
+   'UQ (member_id, target_type, target_id) · 같은 대상에 3명째 신고가 들어오는 순간 관리자에게 메일 한 번 (자동 숨김 없음 · 관리자가 보고 숨긴다)'],
   ['cart', '활동바구니', '활동바구니 · 담으면 저장되고, 앱이 앱 토큰으로 가져간다', [
     ['번호','cart_id','자동 증가 번호','key'],
     ['회원','member_id','담은 회원','link'],
@@ -903,7 +925,7 @@ const G = [
     ['담은 때','created_at','바구니에 담은 때'],
     ['보낸 때','sent_at','내 꿀방울로 보내기를 누른 때 · 비어 있으면 바구니에 있음','opt'],
     ['앱이 가져간 때','picked_at','비어 있으면 대기 중','opt']],
-   'UQ (member_id, target_type, target_id) · 같은 것은 한 번만 담김 · 빼기 = 삭제 · 앱: GET /app/takes (sent_at IS NOT NULL AND picked_at IS NULL) → 받은 뒤 POST /app/takes/ack 로 picked_at 채움 + schedule.send_count +1 · 가져간 줄은 다음 날 삭제'],
+   'UQ (member_id, target_type, target_id) · 같은 것은 한 번만 담김 · 빼기 = 삭제 · 앱: GET /app/takes (sent_at IS NOT NULL AND picked_at IS NULL) → 받은 뒤 POST /app/takes/ack 로 picked_at 채움 + honey_schedule.send_count +1 · 가져간 줄은 다음 날 삭제'],
   ['app_done_log', '활동완료 로그', '앱이 앱 키로 보낸다 · 웹 계정 없이도 쌓인다 · 쌓기만 하고 고치지 않는 로그 · FK 없음', [
     ['번호','done_id','자동 증가 번호','key'],
     ['활동','activity_id','한 활동 · FK 없음'],
@@ -927,39 +949,33 @@ const G = [
     ['지운 때','deleted_at','지운 때 · 소프트 삭제','opt']]]
  ]],
  ['활동과 분류', [
-  ['mission', '미션', '꿀방울 앱의 미션 7개. 이름은 화면 번역 파일에', [
-    ['코드','code','move · clean · rub · auto · tomorrow · detox · know','key'],
-    ['앱 번호','app_no','앱의 미션 id (1=움직이기 …) · 앱이 보낸 값과 맞추는 열쇠'],
-    ['순서','sort','화면에 보이는 순서'],
-    ['고정','fixed','자동행동·내일할일은 모든 스케줄에 자동 포함']]],
-  ['activity_tip', '활동꿀팁', '고민에 도움이 된 활동을 잇는다. 좋아요 · 댓글은 활동 상세에서', [
+  ['honey_activity_tip', '활동꿀팁', '고민에 도움이 된 활동을 잇는다 · 고치지 않고 넣고 지운다. 좋아요 · 댓글은 활동 상세에서', [
     ['번호','activity_tip_id','자동 증가 번호','key'],
     ['고민','worry_id','추천받은 고민','link'],
     ['활동','activity_id','추천한 활동','link'],
     ['추천한 사람','member_id','NOT NULL','link'],
     ['추천한 때','created_at','추천한 때']],
    'UQ (worry_id, activity_id, member_id) · 고민 상세 "도움이 된 활동 N명"은 여기서 셈'],
-  ['activity', '활동', '기본 활동 + 회원이 등록한 활동. 고민에 활동을 추천하는 것은 activity_tip', [
+  ['honey_activity', '활동', '기본 활동 + 회원이 등록한 활동. 고민에 활동을 추천하는 것은 honey_activity_tip', [
     ['번호','activity_id','자동 증가 번호','key'],
-    ['미션','mission_code','미션 없이 적은 습관이면 비움','link opt'],
-    ['이름','name','가슴 · 브릿지 · 내 방 …'],
-    ['원문 언어','lang','한국어(ko) · 영어(en) · 일본어(ja) … · 사용자가 만든 활동만','opt'],
-    ['앱 활동 키','app_key','chest · shoulder · room … 기본 활동만 · 앱이 보낸 활동과 맞추는 열쇠','opt'],
-    ['묶음','grp','움직이기만: 상체 · 하체 · 유산소 · 스트레칭','opt'],
+    ['미션','mission_no','미션 번호 1~7 (서버 enum Mission · 앱과 같은 번호) · 미션 없이 적은 습관이면 비움','opt'],
+    ['기본 활동 키','activity_key','arm_circle · shoulder_circle … 기본 활동만 · 앱의 활동 id 와 같은 값','opt'],
+    ['기본 활동','is_default','기본이면 이름을 화면 번역 파일에서'],
+    ['이름','name','사용자가 만든 활동만 · 14자','opt'],
+    ['원문 언어','lang','한국어(ko) · 영어(en) … · 사용자가 만든 활동만','opt'],
     ['설명','description','"누워서 무릎을 세우고…"','opt'],
-    ['기본 활동','is_default','기본이면 이름을 번역 파일에서'],
     ['등록한 사람','created_by','기본 활동은 비움','link opt'],
     ['들어온 곳','source','DEFAULT · WEB · APP'],
-    ['앱 쪽 키','app_local_key','앱의 직접 등록 키 (u-1785719 …) · 같은 활동 두 번 안 받기','opt'],
+    ['앱 쪽 키','app_local_key','앱에서 사용자가 만든 활동 번호 (u-1785719 …) · 같은 활동 두 번 안 받기','opt'],
     ['상태','status','공개(PUBLIC) · 숨김(HIDDEN) · 숨기면 이 활동이 든 활동꿀팁도 안 보임'],
     ['숨긴 때','hidden_at','숨긴 날짜와 시각','opt'],
     ['숨긴 이유','hidden_reason','누가 · 왜 · 예: AI: 광고 / 관리자: 욕설','opt'],
-    ['사용자 수','use_count','추천 칸의 "842명" · 스케줄러가 1시간마다 app_done_log 를 세어 더함'],
+    ['사용자 수','use_count','해 본 사람 수 · 스케줄러가 1시간마다 app_done_log 를 세어 더함'],
     ['활동 수','done_count','활동완료 횟수 · 스케줄러가 1시간마다 app_done_log 를 세어 더함'],
     ['좋아요 수','like_count','활동 상세에서만 누른다 · 스케줄러가 1분마다 like 를 세어 더함'],
     ['등록일','created_at','활동을 등록한 때']],
-   '같은 미션 안에서 이름이 겹치면 안 됨 · UQ (created_by, app_local_key)'],
-  ['activity_url', '활동 영상·글', '활동 하나에 여러 개', [
+   '같은 미션 안에서 이름이 겹치면 안 됨 · UQ (created_by, app_local_key) · 세부 분류(상체 · 하체 …)는 #태그 · 좋아요를 받으면 고치지 않는다'],
+  ['honey_activity_url', '활동 영상·글', '활동 하나에 여러 개 · 고치지 않고 지우고 다시 넣는다', [
     ['번호','activity_url_id','자동 증가 번호','key'],
     ['활동','activity_id','링크가 붙은 활동','link'],
     ['순서','sort','화면에 보이는 순서 · 0부터'],
@@ -1009,8 +1025,8 @@ const G = [
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MARK = { key: ['key','기본키'], link: ['link','연결'], opt: ['opt','NULL 가능'], nn: ['nn','NOT NULL'] };
 const marks = m => { const xs = (m || '').split(' ').filter(Boolean); if (!xs.includes('opt') && !xs.includes('key')) xs.push('nn'); return xs.map(x => `<span class="tag ${MARK[x][0]}">${MARK[x][1]}</span>`).join(''); };
-const withTime = (t, cols) => { if (/_tag$/.test(t) && cols.length <= 2) return cols; const noUpd = ['app_done_log','app_helped_log','member_nickname_history','member_terms_history'].includes(t); const out = cols.filter(c => c[1] !== 'created_at' && c[1] !== 'updated_at'); const oc = cols.find(c => c[1] === 'created_at'); out.push(['등록일','created_at', oc ? oc[2] : '']); if (!out.some(c => c[1] === 'created_at')) out.push(['등록일','created_at','BaseTimeEntity']); if (!noUpd && !out.some(c => c[1] === 'updated_at')) out.push(['수정일','updated_at','BaseTimeEntity']); return out; };
-const TYPE_FIX = { 'member.nickname': 'VARCHAR(12)', 'member_nickname_history.nickname': 'VARCHAR(12)', 'activity.name': 'VARCHAR(14)', 'tag.name': 'VARCHAR(10)', 'comment.text': 'VARCHAR(200)', 'worry.text': 'VARCHAR(200)', 'thought_tip.body': 'VARCHAR(200)', 'schedule.description': 'TEXT', 'activity.created_by': 'BIGINT', 'mission.app_no': 'INT', 'translation.model': 'VARCHAR(50)', 'schedule.title': 'VARCHAR(50)', 'mission.name': 'VARCHAR(20)', 'activity.description': 'TEXT', 'feedback.text': 'TEXT', 'terms.body': 'TEXT', 'translation.text': 'TEXT' };
+const withTime = (t, cols) => { if (/_tag$/.test(t) && cols.length <= 2) return cols; const noUpd = ['app_done_log','app_helped_log','member_nickname_history','member_terms_history','honey_thought_tip_url','honey_activity_url','honey_activity_tip','report'].includes(t); const out = cols.filter(c => c[1] !== 'created_at' && c[1] !== 'updated_at'); const oc = cols.find(c => c[1] === 'created_at'); out.push(['등록일','created_at', oc ? oc[2] : '']); if (!out.some(c => c[1] === 'created_at')) out.push(['등록일','created_at','BaseTimeEntity']); if (!noUpd && !out.some(c => c[1] === 'updated_at')) out.push(['수정일','updated_at','BaseTimeEntity']); return out; };
+const TYPE_FIX = { 'member.nickname': 'VARCHAR(12)', 'member_nickname_history.nickname': 'VARCHAR(12)', 'honey_activity.name': 'VARCHAR(14)', 'tag.name': 'VARCHAR(10)', 'comment.text': 'VARCHAR(200)', 'honey_worry.worry_text': 'VARCHAR(500)', 'honey_thought_tip.thought_tip_text': 'VARCHAR(500)', 'honey_schedule.schedule_text': 'VARCHAR(500)', 'honey_activity.created_by': 'BIGINT', 'honey_activity.mission_no': 'INT', 'honey_activity.activity_key': 'VARCHAR(100)', 'translation.model': 'VARCHAR(50)', 'honey_schedule.schedule_title': 'VARCHAR(50)', 'honey_activity.description': 'TEXT', 'feedback.text': 'TEXT', 'terms.body': 'TEXT', 'translation.text': 'TEXT' };
 const typeOf = (t, c) => {
   if (TYPE_FIX[t + '.' + c]) return TYPE_FIX[t + '.' + c];
   if (/_id$/.test(c)) return 'BIGINT';
@@ -1028,22 +1044,22 @@ const typeOf = (t, c) => {
 
 const JPA = [
  ['주요 기능 (ERD 1)', [
-  ['Worry','worry','',[['Member member','@ManyToOne'],['String text',''],['boolean anonymous',''],['Status status',''],['int likeCount',''],['int answerCount',''],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
-  ['ThoughtTip','thought_tip','',[['Member member','@ManyToOne'],['Worry worry','@ManyToOne · null 가능'],['String body',''],['String lang',''],['Status status',''],['int likeCount',''],['List<ThoughtTipUrl> urls','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
-  ['ThoughtTipUrl','thought_tip_url','',[['ThoughtTip thoughtTip','@ManyToOne'],['int sort',''],['String url','']],[]],
-  ['ActivityTip','activity_tip','',[['Member member','@ManyToOne'],['Worry worry','@ManyToOne'],['Activity activity','@ManyToOne'],['Status status',''],['int likeCount','']],['hide()','show()']],
-  ['Activity','activity','',[['Mission mission','@ManyToOne · null 가능'],['String name',''],['String grp',''],['String description',''],['boolean isDefault',''],['Member createdBy','@ManyToOne · null 가능'],['Status status',''],['int useCount',''],['int doneCount',''],['int likeCount',''],['List<ActivityUrl> urls','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
-  ['ActivityUrl','activity_url','',[['Activity activity','@ManyToOne'],['int sort',''],['String url','']],[]],
-  ['Mission','mission','',[['String code','@Id'],['String name',''],['int sort',''],['boolean fixed','']],[]],
-  ['Schedule','schedule','',[['Member member','@ManyToOne'],['String title',''],['String description',''],['String lang',''],['Status status',''],['int likeCount',''],['List<ScheduleActivity> items','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
-  ['ScheduleActivity','schedule_activity','',[['ScheduleActivityId id','@EmbeddedId'],['Schedule schedule','@ManyToOne @MapsId'],['Activity activity','@ManyToOne @MapsId'],['String days','']],[]],
+  ['HoneyWorry','honey_worry','',[['Member member','@ManyToOne'],['String worryText',''],['Lang lang',''],['boolean anonymous',''],['boolean showTags',''],['Visibility visibility','@Embedded'],['int likeCount',''],['int answerCount',''],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
+  ['HoneyThoughtTip','honey_thought_tip','',[['Member member','@ManyToOne'],['HoneyWorry worry','@ManyToOne'],['String thoughtTipText',''],['Lang lang',''],['boolean showTags',''],['Visibility visibility','@Embedded'],['int likeCount',''],['List<HoneyThoughtTipUrl> urls','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
+  ['HoneyThoughtTipUrl','honey_thought_tip_url','',[['HoneyThoughtTip thoughtTip','@ManyToOne'],['int sort',''],['String url','']],[]],
+  ['HoneyActivityTip','honey_activity_tip','',[['Member member','@ManyToOne'],['HoneyWorry worry','@ManyToOne'],['HoneyActivity activity','@ManyToOne']],[]],
+  ['HoneyActivity','honey_activity','',[['Mission mission','번호로 저장 · null 가능'],['String activityKey',''],['boolean isDefault',''],['String name',''],['Lang lang',''],['String description',''],['Member createdBy','@ManyToOne · null 가능'],['ActivitySource source',''],['String appLocalKey',''],['Visibility visibility','@Embedded'],['int useCount',''],['int doneCount',''],['int likeCount',''],['List<HoneyActivityUrl> urls','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
+  ['HoneyActivityUrl','honey_activity_url','',[['HoneyActivity activity','@ManyToOne'],['int sort',''],['String url','']],[]],
+  ['HoneySchedule','honey_schedule','',[['Member member','@ManyToOne'],['String scheduleTitle',''],['String scheduleText',''],['Lang lang',''],['boolean showTags',''],['Visibility visibility','@Embedded'],['int likeCount',''],['int sendCount',''],['List<HoneyScheduleActivity> items','@OneToMany(cascade ALL, orphanRemoval)'],['Set<Tag> tags','@ManyToMany']],['hide()','show()']],
+  ['HoneyScheduleActivity','honey_schedule_activity','',[['HoneyScheduleActivityId id','@EmbeddedId'],['HoneySchedule schedule','@ManyToOne @MapsId'],['HoneyActivity activity','@ManyToOne @MapsId'],['String days','']],[]],
  ]],
  ['#태그 (ERD 4)', [
   ['Tag','tag','',[['String tagGroup','회원 태그만 · #상황은 null'],['String name',''],['int useCount','']],[]],
  ]],
  ['댓글 · 좋아요 (ERD 5)', [
-  ['Comment','comment','',[['Activity activity','@ManyToOne · 둘 중 하나'],['Schedule schedule','@ManyToOne · 둘 중 하나'],['Member member','@ManyToOne'],['String text',''],['Instant deletedAt','']],['delete()']],
+  ['Comment','comment','',[['HoneyActivity activity','@ManyToOne · 둘 중 하나'],['HoneySchedule schedule','@ManyToOne · 둘 중 하나'],['Member member','@ManyToOne'],['String text',''],['Instant deletedAt','']],['delete()']],
   ['Like','likes','',[['Member member','@ManyToOne'],['TargetType targetType',''],['Long targetId','FK 없음']],[]],
+  ['Report','report','',[['Member member','@ManyToOne'],['TargetType targetType',''],['Long targetId','FK 없음'],['ReportReason reason',''],['String reportText',''],['Instant handledAt','']],['handle()']],
  ]],
  ['회원', [
   ['Member','member','',[['Provider provider',''],['String providerUid',''],['String nickname',''],['Integer birthYear',''],['Lang lang',''],['Role role',''],['Instant lastLoginAt',''],['Set<Tag> tags','@ManyToMany']],['changeNickname(String)','recordLogin(Instant)']],
@@ -1060,7 +1076,10 @@ const JPA = [
  ]],
  ['enum', [
   ['Status','','enum',[['PUBLIC · HIDDEN','']],[]],
-  ['TargetType','','enum',[['WORRY · THOUGHT_TIP · SCHEDULE · ACTIVITY','']],[]],
+  ['Mission','','enum',[['MOVE(1) · CLEAN(2) · RUB(3) · AUTO(4) · TOMORROW(5) · KNOW(6) · DETOX(7)','']],[]],
+  ['ActivitySource','','enum',[['DEFAULT · WEB · APP','']],[]],
+  ['TargetType','','enum',[['WORRY · THOUGHT_TIP · SCHEDULE · ACTIVITY · COMMENT (COMMENT 은 신고만)','']],[]],
+  ['ReportReason','','enum',[['AD · ABUSE · INAPPROPRIATE · ETC','']],[]],
   ['Provider','','enum',[['GOOGLE','']],[]],
   ['Role','','enum',[['USER · ADMIN','']],[]],
   ['TermsType','','enum',[['SERVICE · PRIVACY','']],[]],
@@ -1113,7 +1132,7 @@ document.getElementById('detail').innerHTML = G.map(([g, ts]) => `
   </details>`; }).join('')}`).join('');
 // 지도의 상자를 누르면 그 테이블을 펼친다
 (() => {
-  const M = { e2: ['tag','member_tag','worry_tag','thought_tip_tag','schedule_tag','activity_tag'], e3: ['comment','likes'], e4: ['member','member_nickname_history','cart','terms','member_terms_history','member_app_key','feedback','app_done_log','app_helped_log'] };
+  const M = { e2: ['tag','member_tag','honey_worry_tag','honey_thought_tip_tag','honey_schedule_tag','honey_activity_tag'], e3: ['comment','likes','report'], e4: ['member','member_nickname_history','cart','terms','member_terms_history','member_app_key','feedback','app_done_log','app_helped_log'] };
   const where = t => Object.keys(M).find(k => M[k].includes(t)) || 'e1';
   document.querySelectorAll('#detail details').forEach(d => document.getElementById('cols-' + where(d.id.slice(2))).appendChild(d));
   document.getElementById('detail').remove();
@@ -1145,16 +1164,20 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
   const groups = { 'span-1': ['design','base','entity','login','loginui','check1','spec','ui','api','unit','check2','applink','appact','e2e','folio'] };
   const state = { design: { start: '2026-10-30' }, base: { start: '2026-11-04', end: '2026-11-04' }, entity: { start: '2026-11-04' } }; // 모두에게 보이는 날짜 — 끝난 줄은 여기 적는다
   const st = document.getElementById('saveState');
+  // 저장된 값(브라우저 · 공유 DB)이 비어 있으면 파일에 적은 날짜를 지킨다 — 빈 저장값이 완료일을 지우지 않게
+  const keep = (id, v) => { const f = state[id] || {}; state[id] = { start: (v && v.start) || f.start || '', end: (v && v.end) || f.end || '' }; };
   const fmt = d => d ? d.slice(5).replace('-', '/') : '';
   // ── 예정일 ───────────────────────────────────────────────
   // PLAN_START 부터 시간(큰 값 ÷ 4 = 작업일)으로 주말을 빼고 차례로 잡는다.
-  // 직접 정하려면 PLAN 에 적는다 — 적은 줄은 그 날짜를 쓰고, 다음 줄은 그 완료 다음 작업일부터 이어서 센다.
+  // 예정은 처음 세운 계획(최초 시작일 기준) 그대로 둔다 — 실제 시작 · 완료일은 위 state 에만 적는다.
+  //   그래야 일이 늦거나 빨라도 예정이 따라 움직이지 않고, 예정과 실제를 견줘 볼 수 있다.
+  // 계획 자체를 다시 세울 때만 PLAN 에 적는다 — 적은 줄은 그 날짜를 쓰고, 다음 줄은 그 완료 다음 작업일부터 이어서 센다.
   //   예: base: ['2026-11-03', '2026-11-06']   시작만 적으면 완료는 시간으로 센다
-  const PLAN_START = '2026-11-03'; // 서버 작업 시작일
+  const PLAN_START = '2026-11-03'; // 서버 작업 시작일 (최초 계획)
   const PLAN = {
-    base:   ['2026-11-04', '2026-11-04'],   // 서버 바탕 완료 (https://api.honeysaltlove.com/actuator/health UP)
-    entity: ['2026-11-04', ''],             // 엔티티 시작 (Flyway 붙임) — 완료는 시간으로 센다
   };
+  let planRange = null;   // 합계 줄에 쓰는 예정 범위 (처음 계획)
+  const planOf = {};       // 줄마다 예정 시작 · 완료 (처음 계획) — 앞섰는지 늦었는지 견줄 때
   (() => {
     const day = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
     const isWork = d => d.getDay() % 6 !== 0;
@@ -1170,6 +1193,8 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       next = addWork(x.ed, 1);
     });
     const t0 = Math.min(...list.map(x => x.sd)), t1 = Math.max(...list.map(x => x.ed)) + 864e5, span = t1 - t0;
+    planRange = { sd: md(new Date(t0)), ed: md(new Date(t1 - 864e5)) };
+    list.forEach(x => { planOf[x.id] = { sd: x.sd, ed: x.ed }; });
     const note = s => '<div style="font-size:12px;color:var(--muted);margin-top:3px;">예정 ' + s + '</div>';
     list.forEach(x => {
       const a = (x.sd - t0) / span * 100, b = (x.ed - t0 + 864e5) / span * 100;
@@ -1178,6 +1203,17 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       const e0 = x.r.querySelector('input[id^=end-]'); if (e0) e0.insertAdjacentHTML('afterend', note(md(x.ed)));
     });
   })();
+  // 예정과 실제 견주기 — 작업일(주말 뺌) 차이로 센다. +면 늦음, -면 빠름
+  const ymdOf = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const today0 = () => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); };
+  const workDiff = (a, b) => { if (+a === +b) return 0; const sg = b > a ? 1 : -1; let n = 0; const x = new Date(a); while (+x !== +b) { x.setDate(x.getDate() + sg); if (x.getDay() % 6 !== 0) n += sg; } return n; };
+  const paceOf = id => {
+    const p = planOf[id], v = state[id] || {}; if (!p) return null;
+    if (v.end) { const d = workDiff(p.ed, ymdOf(v.end)); return d < 0 ? [-d + '일 빨리 끝남', 'ahead'] : d > 0 ? [d + '일 늦게 끝남', 'behind'] : ['예정대로 끝남', 'on']; }
+    const t = today0();
+    if (v.start) { const d = workDiff(p.ed, t); return d > 0 ? ['예정 완료보다 ' + d + '일 늦음', 'behind'] : (ymdOf(v.start) < p.sd ? [workDiff(ymdOf(v.start), p.sd) + '일 빨리 시작', 'ahead'] : ['예정 안', 'on']); }
+    const d = workDiff(p.sd, t); return d > 0 ? ['시작 ' + d + '일 늦음', 'behind'] : null;
+  };
   function paint() {
     rows.forEach(r => {
       const v = state[r.dataset.id] || {};
@@ -1186,7 +1222,7 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       if (document.activeElement !== e) e.value = v.end || '';
       r.classList.toggle('done', !!v.end);
       r.classList.toggle('doing', !!v.start && !v.end);
-      const stc = document.getElementById('st-' + r.dataset.id); if (stc) { const s = v.end ? '완료' : v.start ? '진행 중' : (stc.dataset.def || '예정'); stc.dataset.s = s; stc.innerHTML = '<span>' + s + '</span>'; }
+      const stc = document.getElementById('st-' + r.dataset.id); if (stc) { const s = v.end ? '완료' : v.start ? '진행 중' : (stc.dataset.def || '예정'); stc.dataset.s = s; const pc = paceOf(r.dataset.id); stc.innerHTML = '<span>' + s + '</span>' + (pc ? '<div class="pace ' + pc[1] + '">' + pc[0] + '</div>' : ''); }
     });
     // 지금 하는 줄 하나 — 진행 중인 줄 가운데 가장 최근에 시작한 것
     const doing = rows.filter(r => r.classList.contains('doing'));
@@ -1196,7 +1232,18 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       const starts = list.map(i => (state[i] || {}).start).filter(Boolean).sort();
       const ends = list.map(i => (state[i] || {}).end).filter(Boolean).sort();
       const el = document.getElementById(cell);
-      el.textContent = starts.length ? `${fmt(starts[0])} ~ ${ends.length === list.length ? fmt(ends[ends.length - 1]) : '진행 중'} · 완료 ${ends.length}/${list.length}` : '';
+      // 합계: 예정(처음 계획)과 실제를 두 줄로 나눠 보인다
+      const plan = planRange ? `${planRange.sd} ~ ${planRange.ed}` : '';
+      const done = ends.length === list.length;
+      const real = starts.length ? `${fmt(starts[0])} ~ ${done ? fmt(ends[ends.length - 1]) : '진행 중'} · 완료 ${ends.length}/${list.length}` : '아직 시작 전';
+      el.innerHTML = `<div><b>예정</b> ${plan}</div><div><b>실제</b> ${real}</div>`;
+      const tot = document.getElementById(cell.replace('span-', 'total-'));
+      if (tot && starts.length) {
+        const ymd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+        const a = ymd(starts[0]), b = done ? ymd(ends[ends.length - 1]) : new Date();
+        let n = 0; for (const x = new Date(a); x <= b; x.setDate(x.getDate() + 1)) if (x.getDay() % 6 !== 0) n++;
+        tot.innerHTML = `<div><b>예정</b> 17~26일 · 약 4~6주</div><div><b>실제</b> ${done ? '' : '지금까지 '}작업일 ${n}일</div>`;
+      }
     });
   }
   paint();
@@ -1209,7 +1256,7 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       // claude.ai 밖(shinmiseong.com 등)에서는 이 브라우저에만 남긴다 — 다른 사람 화면에는 안 보인다.
       //   모두에게 보이게 하려면 날짜를 파일의 state 에 적는다.
       const KEY = 'hsl-v2-progress';
-      try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+      try { Object.entries(JSON.parse(localStorage.getItem(KEY) || '{}')).forEach(([id, v]) => keep(id, v)); } catch (e) {}
       paint();
       inputs.forEach(i => { i.disabled = false; });
       st.textContent = '· 이 브라우저에만 저장';
@@ -1223,7 +1270,7 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
       return;
     }
     db.collection('progress').onSnapshot(snap => {
-      snap.docs.forEach(d => { state[d.id] = d.data() || {}; });
+      snap.docs.forEach(d => keep(d.id, d.data() || {}));
       if (!(state.design || {}).start) state.design = { ...(state.design || {}), start: '2026-10-30' };
       paint();
     }, () => { st.textContent = '· 불러오지 못함'; });
