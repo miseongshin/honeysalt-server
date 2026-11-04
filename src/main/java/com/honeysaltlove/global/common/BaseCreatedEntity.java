@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 
 /**
- * 등록일만 있는 엔티티의 부모 — 로그 테이블에서 사용(app_done_log · app_helped_log)
+ * 등록일만 있는 엔티티의 부모 — 수정 없이 등록만 하는 테이블에서 사용
  *
  * @author shinm
  * @since 2026-11-04

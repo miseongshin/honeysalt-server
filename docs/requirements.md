@@ -44,13 +44,13 @@
 
 설계서 3절(ERD · 테이블 정의 · 제약조건 · 참고사항)을 보고 만든다. 묶음마다 엔티티 + 마이그레이션 + 테스트.
 
-1. [ ] Flyway 붙이기: `flyway-core` · `flyway-database-postgresql` · `ddl-auto: validate` (local · prod) — 테이블은 Flyway 만 만든다
-2. [ ] 공통: `BaseTimeEntity`(등록일 · 수정일) · `BaseCreatedEntity`(등록일 — 로그 테이블만) · JPA Auditing
-3. [ ] 회원: `member` · `member_nickname_history` · `terms` · `member_consent`
+1. [x] Flyway 붙이기: `flyway-core` · `flyway-database-postgresql` · `ddl-auto: validate` (local · prod) — 테이블은 Flyway 만 만든다
+2. [x] 공통: `BaseTimeEntity`(등록일 · 수정일) · `BaseCreatedEntity`(등록일) · JPA Auditing
+3. [x] 회원: `member` · `member_nickname_history` · `terms` · `member_terms_history`
 4. [ ] 주요기능: `worry` · `thought_tip` · `thought_tip_url` · `activity_tip` · `mission` · `activity` · `activity_url` · `schedule` · `schedule_activity`
 5. [ ] 태그: `tag` · `member_tag` · `worry_tag` · `thought_tip_tag` · `schedule_tag` · `activity_tag` — 연결 엔티티 없이 `@JoinTable`
 6. [ ] 반응: `comment` · `likes`
-7. [ ] 앱 · 기타: `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 연관 없이 id 숫자만, 추가만
+7. [ ] 앱 · 기타: `member_app_key` · `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 `app_key_id` 숫자만(연관 없이), 추가만
 8. [ ] 엔티티 규칙 확인: 연관 모두 `LAZY` · enum `@Enumerated(STRING)` · setter 없이 메서드로만 (`hide("AI: 광고")`)
 9. [ ] 기본 데이터: `mission` · `tag` · `terms`
 10. [ ] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과
