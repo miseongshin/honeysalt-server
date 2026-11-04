@@ -153,7 +153,7 @@ likeRepository.save(like);
 | 정한 값 | 그 숫자의 출처 (`// 시안의 닉네임 규칙: 2~12자`) |
 | 쓰지 말 것 | 지운 코드 주석 처리(git 에 있다), 코드 사이의 변경 이력 주석(git log), 뻔한 getter 설명 |
 
-머리 주석 양식:
+머리 주석 양식 (파일 맨 위):
 
 ```java
 /**
@@ -168,12 +168,20 @@ likeRepository.save(like);
  */
 ```
 
+이력 표는 파일을 열자마자 흐름을 보려고 둔다 (git 을 매번 찾지 않게).
+
+- 동작이 바뀔 때만 한 줄 — 하는 일 · 규칙 · 연결이 달라졌을 때
+- 주석 · 이름 · 줄 맞춤처럼 동작이 그대로인 수정은 적지 않는다
+- NOTE 는 무엇이 달라졌는지 짧게 (`OAuth 로그인 주소 열기`)
+- 동작을 바꾼 커밋이면 커밋 전에 이력 줄이 들어갔는지 같이 본다
+
 Javadoc 예:
 
 ```java
 /**
  * 고민을 숨긴다. 지우지 않고 HIDDEN 으로 둔다.
- *
+ * @author shinm
+ * @since 2026-10-30
  * @throws BusinessException FORBIDDEN — 본인 글이 아닐 때
  */
 public void hide(Long worryId, Long memberId) { … }
@@ -188,6 +196,8 @@ public void hide(Long worryId, Long memberId) { … }
 ```java
 /**
  * 고민. 등록하면 바로 공개하고, 지우지 않고 숨김(HIDDEN)으로만 내린다.
+ * @author shinm
+ * @since 2026-10-30
  */
 @Entity
 public class Worry extends BaseTimeEntity {
@@ -204,7 +214,8 @@ public class Worry extends BaseTimeEntity {
 ```java
     /**
      * 숨긴다. 본인 · 관리자 · AI 검사가 숨길 수 있고, 누가 왜 숨겼는지 남긴다.
-     *
+     * @author shinm
+     * @since 2026-10-30
      * @param reason 예: "AI: 광고" · "관리자: 욕설"
      */
     public void hide(String reason) {
