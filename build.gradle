@@ -32,6 +32,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'                 // 테이블은 Flyway 가 만든다 (db/migration 의 SQL)
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'     // Flyway 10 부터 PostgreSQL 지원이 따로 나뉘었다
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
