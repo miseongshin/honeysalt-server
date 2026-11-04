@@ -9,13 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * @Author : shinm
- * @Date : 26. 1. 8
- * @Description :
- * * ===========================================================
+ * 설정 파일의 ENC(...) 값을 풀어 쓰는 jasypt 암호기. 마스터 키는 환경변수(JASYPT_ENCRYPTOR_PASSWORD)로 받는다
+ *
+ * @author shinm
+ * @since 2026-01-08
+ * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 26. 1. 8.        shinm       최초 생성
+ * 2026-01-08        shinm              최초 생성
  */
 @Configuration
 @EnableEncryptableProperties

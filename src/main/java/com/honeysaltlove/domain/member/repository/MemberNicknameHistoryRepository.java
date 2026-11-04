@@ -17,5 +17,5 @@ import java.util.List;
  */
 public interface MemberNicknameHistoryRepository extends JpaRepository<MemberNicknameHistory, Long> {
 
-    List<MemberNicknameHistory> findByMemberIdOrderByCreatedAtDesc(Long memberId);   // 색인 (member_id, created_at)
+    List<MemberNicknameHistory> findByMemberIdOrderByCreatedAtDesc(Long memberId);   // 인덱스: (member_id, created_at)
 }

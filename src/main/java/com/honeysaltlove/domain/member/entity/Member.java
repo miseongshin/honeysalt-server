@@ -47,7 +47,7 @@ public class Member extends BaseTimeEntity {
     private Provider provider;
 
     @Column(name = "provider_uid", nullable = false, length = 100)
-    private String providerUid;                // provider 와 묶어서 겹치면 안 됨 (UK)
+    private String providerUid;                // provider와 조합한 값이 중복되면 안 된다 (UK)
 
     @Column(nullable = false, length = 12, unique = true)
     private String nickname;                   // 2~12자 (시안의 닉네임 규칙)
@@ -56,7 +56,7 @@ public class Member extends BaseTimeEntity {
     private Integer birthYear;
 
     @Column(nullable = false, length = 20)
-    private Lang lang;                         // 가입할 때 화면(vue)의 언어 · DB 에는 ko · en … (LangConverter)
+    private Lang lang;                         // 가입할 때 화면(Vue)의 언어 · DB 에는 ko · en … (LangConverter)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -83,8 +83,8 @@ public class Member extends BaseTimeEntity {
     }
 
     /**
-     * 닉네임을 바꾼다. - 닉네임 이력을 위해 변경 전 닉네임을 이력(MemberNicknameHistory)으로 return한다
-     * 돌려받은 이력은 부르는 쪽(서비스)이 저장한다
+     * 닉네임을 바꾼다. 닉네임 변경 이력을 남기기 위해 변경 전 닉네임을 이력(MemberNicknameHistory)으로 반환한다
+     * 반환된 이력은 호출한 서비스에서 저장한다
      * @author shinm
      * @since 2026-11-04
      */

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 화면(vue)이 보낸 언어 코드 받기
+ * 화면(Vue)이 보낸 언어 코드 받기
  *
  * @author shinm
  * @since 2026-11-04

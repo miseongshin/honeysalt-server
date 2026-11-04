@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * 요청별 접근 권한. 지금은 상태 확인(health)만 열고 나머지는 막는다
+ *  SecurityConfig - 스프링 시큐리티 설정
  *
  * @author shinm
  * @since 2026-11-04
@@ -21,7 +21,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     /**
-     * health 만 열고 나머지는 로그인 뒤로 둔다. 로그인(OAuth)을 붙일 때 여기서 연다
+     * 스프링 시큐리티 필터 설정
+     *
      * @author shinm
      * @since 2026-11-04
      */
@@ -29,11 +30,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health").permitAll()   // nginx · 배포 뒤 살아 있는지 확인하는 자리
+                .requestMatchers("/actuator/health").permitAll()   // nginx · 배포 후 서버 정상 여부 확인
                 .anyRequest().authenticated())
-            .formLogin(AbstractHttpConfigurer::disable)            // API 서버라 스프링 기본 로그인 화면이 필요 없다
-            .httpBasic(AbstractHttpConfigurer::disable)            // 아이디·비번을 매 요청에 싣는 방식은 쓰지 않는다
-            .csrf(Customizer.withDefaults());                      // 웹 API(세션 쿠키)를 붙일 때 다시 정한다
+            .formLogin(AbstractHttpConfigurer::disable)            // API 서버라 스프링 기본 로그인 화면을 사용하지 않는다
+            .httpBasic(AbstractHttpConfigurer::disable)            // 아이디·비밀번호 로그인 기능을 사용하지 않는다
+            .csrf(Customizer.withDefaults());                      // CSRF 토큰 보안을 사용한다
         return http.build();
     }
 }

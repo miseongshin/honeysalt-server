@@ -62,7 +62,7 @@ public class Terms extends BaseTimeEntity {
     }
 
     /**
-     * 새로운 약관등록
+     * 새 약관을 등록한다
      * @author shinm
      * @since 2026-11-04
      */
