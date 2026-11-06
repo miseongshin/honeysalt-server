@@ -40,7 +40,7 @@
 
 ---
 
-## 2. 엔티티 · Flyway · 기본 데이터 (11/5~)
+## 2. 엔티티 · Flyway (11/5~)
 
 설계서 3절(ERD · 테이블 정의 · 제약조건 · 참고사항)을 보고 만든다. 묶음마다 엔티티 + 마이그레이션 + 테스트.
 
@@ -51,7 +51,10 @@
 5. [x] 태그: `tag` · `member_tag` · `honey_worry_tag` · `honey_thought_tip_tag` · `honey_schedule_tag` · `honey_activity_tag` · `tag_blocklist`(사용이 차단된 태그) — 연결 엔티티 없이 `@JoinTable`
 6. [x] 반응: `honey_comment` · `honey_like` · `honey_complaint`(신고 — 저장하고, 같은 글에 3명 이상 신고하면 관리자에게 메일 · 메일 발송 설정은 그때)
 7. [x] 앱 · 기타: `member_app_key` · `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 `app_key_id` 숫자만(연관 없이), 추가만
-8. [ ] 엔티티 규칙 확인: 연관 모두 `LAZY` · enum `@Enumerated(STRING)` · setter 없이 메서드로만 (`hide("AI: 광고")`)
-9. [ ] 기본 데이터: `tag` · `terms`
-10. [ ] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과
-11. [ ] 서버 `love` 에 적용 (배포하면 Flyway 가 올린다) → `https://api.honeysaltlove.com/actuator/health` → `UP`
+8. [x] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과
+9. [x] 서버 `love` 에 적용 (배포하면 Flyway 가 올린다) → `https://api.honeysaltlove.com/actuator/health` → `UP`
+
+## 3. API 구현
+
+1. [ ] 기본 데이터: `tag` · `terms` — 태그 목록 · 약관 본문이 정해진 뒤 새 V 파일로
+2. [ ] 엔티티 규칙 확인 (엔티티를 다 만든 뒤 · 맨 끝): 연관 모두 `LAZY` · enum `@Enumerated(STRING)` · setter 없이 메서드로만 (`hide("AI: 광고")`)
