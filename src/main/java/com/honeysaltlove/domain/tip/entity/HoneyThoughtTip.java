@@ -2,6 +2,7 @@ package com.honeysaltlove.domain.tip.entity;
 
 import com.honeysaltlove.domain.member.entity.Member;
 import com.honeysaltlove.domain.worry.entity.HoneyWorry;
+import com.honeysaltlove.domain.tag.entity.Tag;
 import com.honeysaltlove.global.common.BaseTimeEntity;
 import com.honeysaltlove.global.common.Lang;
 import com.honeysaltlove.global.common.Visibility;
@@ -14,6 +15,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -23,7 +26,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 생각꿀팁. 고민에 답한다 — 고민에 연결된 글 (worry 는 꼭 있다)
@@ -38,6 +43,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
+ * 2026-11-06        shinm              태그 연결 (honey_thought_tip_tag)
  */
 @Getter
 @Entity
@@ -76,6 +82,12 @@ public class HoneyThoughtTip extends BaseTimeEntity {
     @OrderBy("sort")
     private List<HoneyThoughtTipUrl> urls = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(name = "honey_thought_tip_tag",
+            joinColumns = @JoinColumn(name = "thought_tip_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();   // #상황 태그
+
     /**
      * 생각꿀팁을 등록한다
      * @author shinm
@@ -101,6 +113,16 @@ public class HoneyThoughtTip extends BaseTimeEntity {
         for (int i = 0; i < newUrls.size(); i++) {
             urls.add(HoneyThoughtTipUrl.of(this, i, newUrls.get(i)));
         }
+    }
+
+    /**
+     * 태그를 새로 고른 것으로 바꾼다 (빠진 태그의 연결 행은 지우고, 새 태그는 넣는다)
+     * @author shinm
+     * @since 2026-11-06
+     */
+    public void replaceTags(Set<Tag> newTags) {
+        tags.retainAll(newTags);   // clear() 를 쓰면 자기 tags 를 넘겼을 때 모두 사라진다
+        tags.addAll(newTags);
     }
 
     public void hide(String reason, Instant now) {

@@ -1,5 +1,6 @@
 package com.honeysaltlove.domain.member.entity;
 
+import com.honeysaltlove.domain.tag.entity.Tag;
 import com.honeysaltlove.global.common.BaseTimeEntity;
 import com.honeysaltlove.global.common.Lang;
 import jakarta.persistence.Column;
@@ -9,6 +10,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -16,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 회원.
@@ -30,6 +36,7 @@ import java.time.Instant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
+ * 2026-11-06        shinm              태그 연결 (member_tag)
  */
 @Getter
 @Entity
@@ -64,6 +71,12 @@ public class Member extends BaseTimeEntity {
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;               // 휴면 판단
+
+    @ManyToMany
+    @JoinTable(name = "member_tag",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();   // 맞춤설정에서 고른 회원 태그
 
     private Member(Provider provider, String providerUid, String nickname, Lang lang) {
         this.provider = provider;
@@ -101,5 +114,15 @@ public class Member extends BaseTimeEntity {
      */
     public void recordLogin(Instant now) {
         this.lastLoginAt = now;
+    }
+
+    /**
+     * 태그를 새로 고른 것으로 바꾼다 (빠진 태그의 연결 행은 지우고, 새 태그는 넣는다)
+     * @author shinm
+     * @since 2026-11-06
+     */
+    public void replaceTags(Set<Tag> newTags) {
+        tags.retainAll(newTags);   // clear() 를 쓰면 자기 tags 를 넘겼을 때 모두 사라진다
+        tags.addAll(newTags);
     }
 }

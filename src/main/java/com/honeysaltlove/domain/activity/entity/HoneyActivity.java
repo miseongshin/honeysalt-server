@@ -1,6 +1,7 @@
 package com.honeysaltlove.domain.activity.entity;
 
 import com.honeysaltlove.domain.member.entity.Member;
+import com.honeysaltlove.domain.tag.entity.Tag;
 import com.honeysaltlove.global.common.BaseTimeEntity;
 import com.honeysaltlove.global.common.Lang;
 import com.honeysaltlove.global.common.Visibility;
@@ -15,6 +16,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -26,7 +29,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 활동. 기본 활동 · 회원 등록 활동 · 앱 공유 활동
@@ -42,6 +47,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
+ * 2026-11-06        shinm              태그 연결 (honey_activity_tag)
  */
 @Getter
 @Entity
@@ -101,6 +107,12 @@ public class HoneyActivity extends BaseTimeEntity {
     @OrderBy("sort")
     private List<HoneyActivityUrl> urls = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(name = "honey_activity_tag",
+            joinColumns = @JoinColumn(name = "activity_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();   // #상황 태그 · 세부 분류(상체 · 하체 …)도 태그로
+
     /**
      * 기본 활동 만들기 (이름은 Vue 번역 파일에서 activityKey 로)
      * @author shinm
@@ -143,6 +155,16 @@ public class HoneyActivity extends BaseTimeEntity {
         for (int i = 0; i < newUrls.size(); i++) {
             urls.add(HoneyActivityUrl.of(this, i, newUrls.get(i)));
         }
+    }
+
+    /**
+     * 태그를 새로 고른 것으로 바꾼다 (빠진 태그의 연결 행은 지우고, 새 태그는 넣는다)
+     * @author shinm
+     * @since 2026-11-06
+     */
+    public void replaceTags(Set<Tag> newTags) {
+        tags.retainAll(newTags);   // clear() 를 쓰면 자기 tags 를 넘겼을 때 모두 사라진다
+        tags.addAll(newTags);
     }
 
     public void hide(String reason, Instant now) {

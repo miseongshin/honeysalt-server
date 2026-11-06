@@ -1,6 +1,7 @@
 package com.honeysaltlove.domain.worry.entity;
 
 import com.honeysaltlove.domain.member.entity.Member;
+import com.honeysaltlove.domain.tag.entity.Tag;
 import com.honeysaltlove.global.common.BaseTimeEntity;
 import com.honeysaltlove.global.common.Lang;
 import com.honeysaltlove.global.common.Visibility;
@@ -12,12 +13,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 고민. 등록 즉시 공개하며, 삭제하지 않고 숨김(HIDDEN) 처리만 한다
@@ -29,6 +34,7 @@ import java.time.Instant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
+ * 2026-11-06        shinm              태그 연결 (honey_worry_tag)
  */
 @Getter
 @Entity
@@ -54,7 +60,7 @@ public class HoneyWorry extends BaseTimeEntity {
     private boolean anonymous;
 
     @Column(name = "show_tags", nullable = false)
-    private boolean showTags;                  // 글 옆에 내 태그(MBTI 등) 보이기
+    private boolean showTags;                  // 글 옆에 내 태그 보이기
 
     @Embedded
     private Visibility visibility = Visibility.visible();
@@ -64,6 +70,12 @@ public class HoneyWorry extends BaseTimeEntity {
 
     @Column(name = "answer_count", nullable = false)
     private int answerCount;                   // 0 = 답을 기다리는 고민
+
+    @ManyToMany
+    @JoinTable(name = "honey_worry_tag",
+            joinColumns = @JoinColumn(name = "worry_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();   // #상황 태그
 
     /**
      * 고민을 등록한다
@@ -78,6 +90,16 @@ public class HoneyWorry extends BaseTimeEntity {
         w.anonymous = anonymous;
         w.showTags = showTags;
         return w;
+    }
+
+    /**
+     * 태그를 새로 고른 것으로 바꾼다 (빠진 태그의 연결 행은 지우고, 새 태그는 넣는다)
+     * @author shinm
+     * @since 2026-11-06
+     */
+    public void replaceTags(Set<Tag> newTags) {
+        tags.retainAll(newTags);   // clear() 를 쓰면 자기 tags 를 넘겼을 때 모두 사라진다
+        tags.addAll(newTags);
     }
 
     public void hide(String reason, Instant now) {
