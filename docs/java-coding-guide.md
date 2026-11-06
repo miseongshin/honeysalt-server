@@ -141,7 +141,7 @@ global 에 두는 것:
 likeRepository.save(like);
 
 // ○ 왜 — 코드만 봐서는 모르는 이유
-// 수(like_count)는 여기서 올리지 않는다. 인기 글에 몰리면 줄 잠금이 걸린다. 스케줄러가 1분마다 모아 더한다
+// 수(like_count)는 여기서 올리지 않는다. 호출마다 수정하면 인기 글에서 로우 락(row lock)으로 기다린다. 스케줄러가 1분마다 다시 세어 맞춘다
 likeRepository.save(like);
 ```
 
@@ -202,7 +202,7 @@ public void hide(Long worryId, Long memberId) { … }
 @Entity
 public class Worry extends BaseTimeEntity {
 
-    // 목록 정렬(좋아요순)에 바로 쓰려고 미리 센다. 원본은 likes, 스케줄러가 1분마다 더한다
+    // 목록 정렬(좋아요순)에 바로 쓰려고 미리 센다. 원본은 honey_like, 스케줄러가 1분마다 다시 세어 맞춘다
     private int likeCount;
 
     // 0 이면 '답을 기다리는 고민'. 생각꿀팁 · 활동꿀팁을 쓸 때 1 올린다
@@ -416,7 +416,9 @@ memberRepository.save(member);
 - 서비스 클래스에 `@Transactional(readOnly = true)`, 쓰는 메서드에만 `@Transactional`
 - `spring.jpa.open-in-view: false` — 트랜잭션 밖에서 지연 로딩하지 않는다
 - 목록은 N+1 을 막는다: fetch join · `@EntityGraph` · `default_batch_fetch_size: 100`
-- 숫자(`like_count` · `use_count` · `done_count`)는 누를 때 올리지 않는다. 원본(`likes` · `app_done_log`)에 쌓고, `@Scheduled` 가 새로 쌓인 것만 세어 한 번에 더한다(좋아요 1분 · 나머지 1시간)
+- 숫자(`like_count` · `use_count` · `done_count`)는 호출마다 수정하지 않는다 — 인기 글에 몰려도 로우 락(row lock)으로 기다리지 않게
+  - 활동 수(`use_count` · `done_count`): 원본(`app_done_log`)에 쌓고, `@Scheduled` 가 새로 쌓인 것만 세어 한 번에 더한다(1시간)
+  - 좋아요(`like_count`): 취소하면 `honey_like` 행을 지워서 더하기로는 줄어든 걸 모른다 — `@Scheduled` 가 1분마다 다시 세어 맞춘다(1분 동안은 실제 좋아요 수와 다를 수 있다) · 글의 `like_count` 는 `UPDATE` 쿼리로 갱신한다 — 엔티티로 고치면 글의 수정일까지 바뀐다
 - 지운 글은 `deleted_at` 으로 숨긴다(`@SQLRestriction("deleted_at is null")`)
 
 ---

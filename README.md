@@ -34,6 +34,7 @@ com.honeysaltlove
 │   ├── tip/         생각꿀팁 · 활동꿀팁
 │   ├── activity/    활동
 │   ├── schedule/    꿀방울 스케줄
+│   ├── reaction/    댓글 · 좋아요 · 신고
 │   └── tag/         태그 · 사용이 차단된 태그
 └── global/          모든 기능이 함께 쓰는 것 (업무 규칙은 두지 않는다)
     ├── common/      공통 엔티티 · 언어 · 공개/숨김
