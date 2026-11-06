@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * 태그 테이블의 제약 · 연결 확인 — love_local(터널)에 붙어 돌고, 끝나면 되돌린다(@Transactional)
+ * 태그 테이블의 제약 · 연결 확인 — love_local(터널)에 붙어 돌고, 테스트가 끝나면 롤백한다(@Transactional)
  *
  * @author shinm
  * @since 2026-11-06

@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * 댓글 · 좋아요 · 신고 테이블의 제약 · 저장 확인 — love_local(터널)에 붙어 돌고, 끝나면 되돌린다(@Transactional)
+ * 댓글 · 좋아요 · 신고 테이블의 제약 · 저장 확인 — love_local(터널)에 붙어 돌고, 테스트가 끝나면 롤백한다(@Transactional)
  *
  * @author shinm
  * @since 2026-11-06
@@ -91,6 +91,22 @@ class ReactionRepositoryTest {
                                 + "values (:m, '대상 없음', 'ko', 'PUBLIC', now(), now())")
                 .setParameter("m", member.getId()).executeUpdate())
                 .hasStackTraceContaining("ck_honey_comment_one_target");   // 다른 오류(오타 등)로 통과하지 않게
+    }
+
+    @Test
+    @DisplayName("댓글은 활동 · 스케줄 둘 다에 달 수 없다 (둘 다 채우면 DB 가 막는다)")
+    void commentBothTargets() {
+        // given
+        HoneySchedule schedule = scheduleRepository.saveAndFlush(HoneySchedule.write(member, "저녁 루틴", null, Lang.KO, false));
+
+        // when · then — 엔티티로는 만들 수 없는 경우라 SQL 로 직접 넣어 본다
+        assertThatThrownBy(() -> em.createNativeQuery(
+                        "insert into honey_comment (activity_id, schedule_id, member_id, comment_text, lang, status, created_at, updated_at) "
+                                + "values (:a, :s, :m, '대상 둘', 'ko', 'PUBLIC', now(), now())")
+                .setParameter("a", activity.getId())
+                .setParameter("s", schedule.getId())
+                .setParameter("m", member.getId()).executeUpdate())
+                .hasStackTraceContaining("ck_honey_comment_one_target");
     }
 
     @Test

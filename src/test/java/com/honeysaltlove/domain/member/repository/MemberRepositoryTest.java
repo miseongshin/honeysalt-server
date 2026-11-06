@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * 회원 테이블의 제약 · 등록일 확인 — love_local(터널)에 붙어 돌고, 끝나면 되돌린다(@Transactional)
+ * 회원 테이블의 제약 · 등록일 확인 — love_local(터널)에 붙어 돌고, 테스트가 끝나면 롤백한다(@Transactional)
  * Docker 가 없어 Testcontainers 대신 개발 DB 를 쓴다
  *
  * @author shinm

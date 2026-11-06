@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +36,8 @@ import java.time.Instant;
  */
 @Getter
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_honey_complaint_member_target",
+        columnNames = {"member_id", "target_type", "target_id"}))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HoneyComplaint extends BaseCreatedEntity {
 

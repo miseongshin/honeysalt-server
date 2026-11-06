@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +22,7 @@ import lombok.NoArgsConstructor;
  * 좋아요. 고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글에 누른다 (한 사용자는 대상마다 한 번)
  * <pre>
  * - 취소하면 행을 지운다 · 고치지 않으니 등록일만 둔다
- * - 좋아요 수(like_count)는 1분마다 다시 세어 맞춘다 — 1분 동안은 실제 좋아요 수와 다를 수 있다
+ * - 좋아요 수(like_count)는 스케줄러가 1분마다 다시 세어 맞춘다 — 1분 동안은 실제 좋아요 수와 다를 수 있다
  * </pre>
  *
  * @author shinm
@@ -32,6 +34,8 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_honey_like_member_target",
+        columnNames = {"member_id", "target_type", "target_id"}))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HoneyLike extends BaseCreatedEntity {
 
