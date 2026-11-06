@@ -50,7 +50,7 @@
 4. [x] 주요기능: `honey_worry` · `honey_thought_tip` · `honey_thought_tip_url` · `honey_activity_tip` · `honey_activity` · `honey_activity_url` · `honey_schedule` · `honey_schedule_activity` — 미션은 테이블 없이 enum
 5. [x] 태그: `tag` · `member_tag` · `honey_worry_tag` · `honey_thought_tip_tag` · `honey_schedule_tag` · `honey_activity_tag` · `tag_blocklist`(사용이 차단된 태그) — 연결 엔티티 없이 `@JoinTable`
 6. [x] 반응: `honey_comment` · `honey_like` · `honey_complaint`(신고 — 저장하고, 같은 글에 3명 이상 신고하면 관리자에게 메일 · 메일 발송 설정은 그때)
-7. [ ] 앱 · 기타: `member_app_key` · `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 `app_key_id` 숫자만(연관 없이), 추가만
+7. [x] 앱 · 기타: `member_app_key` · `cart` · `app_done_log` · `app_helped_log` · `feedback` — 로그는 `app_key_id` 숫자만(연관 없이), 추가만
 8. [ ] 엔티티 규칙 확인: 연관 모두 `LAZY` · enum `@Enumerated(STRING)` · setter 없이 메서드로만 (`hide("AI: 광고")`)
 9. [ ] 기본 데이터: `tag` · `terms`
 10. [ ] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과

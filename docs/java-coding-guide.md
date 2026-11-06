@@ -417,7 +417,7 @@ memberRepository.save(member);
 - `spring.jpa.open-in-view: false` — 트랜잭션 밖에서 지연 로딩하지 않는다
 - 목록은 N+1 을 막는다: fetch join · `@EntityGraph` · `default_batch_fetch_size: 100`
 - 숫자(`like_count` · `use_count` · `done_count`)는 호출마다 수정하지 않는다 — 인기 글에 몰려도 로우 락(row lock)으로 기다리지 않게
-  - 활동 수(`use_count` · `done_count`): 원본(`app_done_log`)에 쌓고, `@Scheduled` 가 새로 쌓인 것만 세어 한 번에 더한다(1시간)
+  - 활동 수(`use_count` · `done_count` · `helped_count`): 원본(`app_done_log` · `app_helped_log`)에 쌓고, `@Scheduled` 가 1시간마다 활동별로 다시 센다(사용자 수는 앱 키를 겹치지 않게) — 집계 기준 시점을 따로 저장하지 않아 누락되거나 중복 집계될 가능성이 없다
   - 좋아요(`like_count`): 취소하면 `honey_like` 행을 지워서 더하기로는 줄어든 걸 모른다 — `@Scheduled` 가 1분마다 다시 세어 맞춘다(1분 동안은 실제 좋아요 수와 다를 수 있다) · 글의 `like_count` 는 `UPDATE` 쿼리로 갱신한다 — 엔티티로 고치면 글의 수정일까지 바뀐다
 - 지운 글은 `deleted_at` 으로 숨긴다(`@SQLRestriction("deleted_at is null")`)
 

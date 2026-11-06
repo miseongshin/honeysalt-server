@@ -35,6 +35,9 @@ com.honeysaltlove
 │   ├── activity/    활동
 │   ├── schedule/    꿀방울 스케줄
 │   ├── reaction/    댓글 · 좋아요 · 신고
+│   ├── app/         앱 키 · 활동완료 로그 · 도움돼요 로그
+│   ├── cart/        활동바구니 (웹 → 앱 보내기)
+│   ├── feedback/    의견 보내기
 │   └── tag/         태그 · 사용이 차단된 태그
 └── global/          모든 기능이 함께 쓰는 것 (업무 규칙은 두지 않는다)
     ├── common/      공통 엔티티 · 언어 · 공개/숨김

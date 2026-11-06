@@ -63,6 +63,7 @@ create table honey_activity (
     hidden_reason  varchar(200),
     use_count      integer      not null default 0,
     done_count     integer      not null default 0,
+    helped_count   integer      not null default 0,
     like_count     integer      not null default 0,
     created_at     timestamptz  not null,
     updated_at     timestamptz  not null,

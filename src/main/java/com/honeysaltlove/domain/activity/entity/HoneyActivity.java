@@ -48,6 +48,7 @@ import java.util.Set;
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
  * 2026-11-06        shinm              태그 연결 (honey_activity_tag)
+ * 2026-11-06        shinm              도움돼요 수 (helped_count)
  */
 @Getter
 @Entity
@@ -99,6 +100,9 @@ public class HoneyActivity extends BaseTimeEntity {
 
     @Column(name = "done_count", nullable = false)
     private int doneCount;                     // 완료 횟수 · 스케줄러가 1시간마다 집계
+
+    @Column(name = "helped_count", nullable = false)
+    private int helpedCount;                   // 도움돼요 수 · 스케줄러가 1시간마다 app_helped_log 를 더해(+1 / -1) 맞춘다
 
     @Column(name = "like_count", nullable = false)
     private int likeCount;                     // 좋아요 수 · 스케줄러가 1분마다 집계
