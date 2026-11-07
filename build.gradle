@@ -37,13 +37,16 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'   // 테스트 DB 를 컨테이너로 (CI · Jenkins)
+    testImplementation 'org.testcontainers:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5' //비밀번호 암호화
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-    systemProperty 'spring.profiles.active', 'local'
+    // 기본은 local (터널 → love_local) · Jenkins 는 -PtestProfile=test (Testcontainers 가 PostgreSQL 을 잠깐 띄운다)
+    systemProperty 'spring.profiles.active', project.findProperty('testProfile') ?: 'local'
 }
 
 tasks.withType(JavaCompile) {

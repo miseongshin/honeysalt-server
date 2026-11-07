@@ -54,6 +54,12 @@
 8. [x] 로컬 `love_local` 에 적용 → 앱이 뜨고 `validate` 통과
 9. [x] 서버 `love` 에 적용 (배포하면 Flyway 가 올린다) → `https://api.honeysaltlove.com/actuator/health` → `UP`
 
+## 서버 배포
+1. [ ] CI/CD (Jenkins)
+    - Jenkins: 서버에 Docker 컨테이너로 · 화면은 밖에 열지 않고 SSH 터널(`localhost:8081`)로 본다
+    - 테스트: 전체 테스트 — DB 테스트는 Testcontainers(PostgreSQL)로 (터널 없이 · 테스트 설정은 `application-test.yml`)
+    - 배포: `Jenkinsfile` — Build Now → 테스트 → docker build → rm · run → health `UP` 확인
+
 ## 3. API 구현
 
 1. [ ] 기본 데이터: `tag` · `terms` — 태그 목록 · 약관 본문이 정해진 뒤 새 V 파일로

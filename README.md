@@ -22,7 +22,8 @@
 | 프레임워크 | Spring Boot 3.5 · Spring Security · Spring Data JPA |
 | 데이터베이스 | PostgreSQL 15 · Flyway |
 | 설정 암호화 | Jasypt |
-| 빌드·배포 | Gradle · Docker · nginx |
+| 테스트 | JUnit 5 · AssertJ · Testcontainers (PostgreSQL) |
+| 빌드·배포 | Gradle · Docker · nginx · Jenkins |
 
 ## 패키지 구조
 
