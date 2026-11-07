@@ -1,6 +1,7 @@
 /**
  * CI/CD — Jenkins 가 GitHub main 을 받아 이 순서대로 돈다 (Build Now)
  * CI: 테스트 · CD: 이미지 만들기 → 다시 띄우기 → health 확인
+ * Jenkins 작업 honeysalt-server 가 쓴다 · 테스트만 돌리는 것은 Jenkinsfile.test (작업 honeysalt-test)
  * 비밀값은 여기 두지 않는다 — 설정(/opt/honeysalt/config)과 마스터 키(/opt/honeysalt/.env)는 서버 것을 그대로 쓴다
  *
  * @author shinm
@@ -67,7 +68,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker image prune -f || true'    // 연결되지 않은 예전 이미지 지우기 (디스크)
+            sh 'docker image prune -f --filter label=app=honeysalt-server || true'    // 연결되지 않은 예전 앱 이미지만 지우기 (디스크 · 다른 이미지는 두고)
         }
     }
 }

@@ -1,0 +1,34 @@
+/**
+ * CI — 테스트만 돌린다 (배포하지 않는다 · 돌고 있는 앱은 그대로)
+ * Jenkins 작업 honeysalt-test 가 쓴다 · 테스트 후 배포까지 하는 것은 Jenkinsfile (작업 honeysalt-server)
+ *
+ * @author shinm
+ * @since 2026-11-07
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-11-07        shinm              최초 생성
+ */
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()                 // 두 번 눌러도 하나씩
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('테스트 (CI)') {
+            steps {
+                sh 'chmod +x gradlew'
+                // DB 는 Testcontainers 가 PostgreSQL 15 를 잠깐 띄운다 (application-test.yml)
+                sh './gradlew --no-daemon clean test -PtestProfile=test'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
+                }
+            }
+        }
+    }
+}

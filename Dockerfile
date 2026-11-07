@@ -1,4 +1,5 @@
 FROM eclipse-temurin:21-jdk AS build
+LABEL app=honeysalt-server
 WORKDIR /src
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle gradle
@@ -7,6 +8,7 @@ COPY src src
 RUN ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:21-jre
+LABEL app=honeysalt-server
 WORKDIR /app
 RUN useradd -r -u 1001 app
 COPY --from=build /src/build/libs/*.jar app.jar
