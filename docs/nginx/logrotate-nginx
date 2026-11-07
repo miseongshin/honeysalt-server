@@ -1,0 +1,29 @@
+# nginx 로그 나누기 logrotate 설정 사본 — 서버 /etc/logrotate.d/nginx 와 같게 둔다
+# 서버에는 git 이 없어서 여기에 남긴다 · 서버에서 고치면 여기도 고친다
+# logrotate 는 줄 끝 주석을 못 읽는다 (`create … # 설명` 은 오류) — 주석은 꼭 따로 한 줄로
+#
+# @author shinm
+# @since 2026-11-07
+# ===========================================================
+# DATE              AUTHOR             NOTE
+# -----------------------------------------------------------
+# 2026-11-07        shinm              최초 생성 — 크기로도 나누기 (기본은 하루마다만) · 14개까지 (원래 10개)
+
+/var/log/nginx/*.log {
+    # 새 로그 파일 권한 · 주인 (원래 설정 그대로)
+    create 0640 nginx root
+    daily
+    # 하루가 안 됐어도 100MB 를 넘으면 나눈다 (logrotate 가 돌 때 · 하루 한 번 확인)
+    maxsize 100M
+    # 14개까지 남기고 오래된 것부터 지운다
+    rotate 14
+    # 지난 로그는 gzip 으로 줄인다 · 바로 전 것은 하루 뒤에 줄인다
+    compress
+    delaycompress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /bin/kill -USR1 $(cat /run/nginx.pid 2>/dev/null) 2>/dev/null || true
+    endscript
+}
