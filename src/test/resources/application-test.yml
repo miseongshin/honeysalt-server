@@ -11,6 +11,14 @@ spring:
     default-property-inclusion: non_null
   flyway:
     placeholder-replacement: false            # V 파일의 JSON 에 있는 ${ 를 설정값 자리로 읽지 않게 (application.yml 과 같게)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:                             # 테스트용 가짜 값 (진짜 키 아님) — 없으면 oauth2Login 이 시작할 때 깨진다
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope: openid
   jpa:
     open-in-view: false
     hibernate:
