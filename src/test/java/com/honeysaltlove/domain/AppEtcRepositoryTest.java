@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * 앱 키 · 앱 로그 · 활동바구니 · 의견 테이블의 제약 · 저장 확인 — love_local(터널)에 붙어 돌고, 테스트가 끝나면 롤백한다(@Transactional)
+ * 앱 키 · 앱 로그 · 꿀팁 바구니 · 의견 테이블의 제약 · 저장 확인 — love_local(터널)에 붙어 돌고, 테스트가 끝나면 롤백한다(@Transactional)
  *
  * @author shinm
  * @since 2026-11-06

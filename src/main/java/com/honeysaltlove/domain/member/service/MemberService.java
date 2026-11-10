@@ -1,13 +1,23 @@
 package com.honeysaltlove.domain.member.service;
 
+import com.honeysaltlove.domain.app.entity.MemberAppKey;
+import com.honeysaltlove.domain.app.repository.MemberAppKeyRepository;
+import com.honeysaltlove.domain.cart.repository.CartRepository;
+import com.honeysaltlove.domain.feedback.repository.FeedbackRepository;
 import com.honeysaltlove.domain.member.auth.LoginMember;
+import com.honeysaltlove.domain.member.dto.MemberResponse;
+import com.honeysaltlove.domain.member.dto.MemberUpdateRequest;
 import com.honeysaltlove.domain.member.dto.TermsAgreeRequest;
 import com.honeysaltlove.domain.member.entity.Member;
+import com.honeysaltlove.domain.member.entity.MemberStatus;
 import com.honeysaltlove.domain.member.entity.MemberTermsHistory;
 import com.honeysaltlove.domain.member.entity.ServiceType;
 import com.honeysaltlove.domain.member.entity.Terms;
+import com.honeysaltlove.domain.member.repository.MemberNicknameHistoryRepository;
 import com.honeysaltlove.domain.member.repository.MemberRepository;
 import com.honeysaltlove.domain.member.repository.MemberTermsHistoryRepository;
+import com.honeysaltlove.domain.tag.entity.Tag;
+import com.honeysaltlove.domain.tag.repository.TagRepository;
 import com.honeysaltlove.global.common.BusinessException;
 import com.honeysaltlove.global.common.Lang;
 import com.honeysaltlove.global.common.ResultCode;
@@ -19,12 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * 회원 — 가입 마치기 · 약관 다시 동의
+ * 회원 — 가입 마치기 · 약관 다시 동의 · 내 정보 · 수정 · 탈퇴
  *
  * @author shinm
  * @since 2026-11-10
@@ -32,6 +43,7 @@ import java.util.Set;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-10        shinm              최초 생성
+ * 2026-11-10        shinm              내 정보 · 수정 · 탈퇴
  */
 @Slf4j
 @Service
@@ -39,9 +51,15 @@ import java.util.Set;
 public class MemberService {
 
     private static final int NICKNAME_TRIES = 10;
+    private static final int MIN_AGE = 14;     // 만 14세 미만은 가입할 수 없다
 
     private final MemberRepository memberRepository;
     private final MemberTermsHistoryRepository termsHistoryRepository;
+    private final MemberNicknameHistoryRepository nicknameHistoryRepository;
+    private final CartRepository cartRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final MemberAppKeyRepository appKeyRepository;
+    private final TagRepository tagRepository;
     private final TermsService termsService;
     private final NicknameGenerator nicknameGenerator;
 
@@ -74,6 +92,71 @@ public class MemberService {
     }
 
     /**
+     * 내 정보
+     * @author shinm
+     * @since 2026-11-10
+     */
+    @Transactional(readOnly = true)
+    public MemberResponse findMe(Long memberId) {
+        return MemberResponse.from(getMember(memberId));   // 태그는 지연 로딩이라 트랜잭션 안에서 바꾼다
+    }
+
+    /**
+     * 내 정보 수정 — 닉네임(비우면 그대로) · 출생연도(비우면 지움) · 내 정보 태그(고른 것 전부)
+     * @author shinm
+     * @since 2026-11-10
+     */
+    @Transactional
+    public MemberResponse updateMe(Long memberId, MemberUpdateRequest request, Instant now) {
+        Member member = getMember(memberId);
+
+        if (StringUtils.hasText(request.nickname()) && !request.nickname().equals(member.getNickname())) {
+            if (memberRepository.existsByNickname(request.nickname())) {
+                throw new BusinessException(ResultCode.DUPLICATE);
+            }
+            nicknameHistoryRepository.save(member.changeNickname(request.nickname()));   // 바꾸기 전 이름을 백업
+        }
+
+        Integer birthYear = request.birthYear();
+        int thisYear = now.atZone(ZoneOffset.UTC).getYear();
+        if (birthYear != null && birthYear > thisYear - MIN_AGE) {
+            throw new BusinessException(ResultCode.VALIDATION);   // 만 14세 미만은 가입할 수 없다 (약관 제2조)
+        }
+        member.changeBirthYear(birthYear);
+
+        member.replaceTags(memberTags(request.tagIds()));
+        try {
+            memberRepository.flush();   // 닉네임이 동시에 겹치면 UQ 에 걸린다 — 500 이 아니라 409
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ResultCode.DUPLICATE, e);
+        }
+        return MemberResponse.from(member);
+    }
+
+    /**
+     * 탈퇴 — 개인정보를 바로 비우고, 연결된 기록을 같은 트랜잭션에서 지운다 (개인정보처리방침 3절)
+     * <pre>
+     * - 비운다: 소셜 회원번호 · 닉네임 · 출생연도 · 마지막 로그인 · 내 정보 태그 (Member.withdraw)
+     * - 지운다: 닉네임 백업 · 꿀팁 바구니 · 의견 보내기 · 약관 동의 기록
+     * - 앱 연결: 회원 연결만 끊는다 (앱 키는 남겨서 앱 혼자 계속 쓴다)
+     * - 남긴다: 글 · 댓글 · 좋아요 · 신고 기록 (작성자는 '탈퇴한 회원')
+     * </pre>
+     * @author shinm
+     * @since 2026-11-10
+     */
+    @Transactional
+    public void withdraw(Long memberId, Instant now) {
+        Member member = getMember(memberId);
+        nicknameHistoryRepository.deleteByMemberId(memberId);
+        cartRepository.deleteByMemberId(memberId);
+        feedbackRepository.deleteByMemberId(memberId);
+        termsHistoryRepository.deleteByMemberId(memberId);
+        appKeyRepository.findByMemberId(memberId).forEach(MemberAppKey::unlink);
+        member.withdraw(now);
+        log.info("member withdrawn: memberId={}", memberId);
+    }
+
+    /**
      * 지금 보여 주는 필수 약관에 모두 동의했는지 — 아니면 로그인할 때 다시 동의를 받는다
      * @author shinm
      * @since 2026-11-10
@@ -82,6 +165,28 @@ public class MemberService {
     public boolean hasAgreedCurrentTerms(Long memberId, Instant now) {
         Set<Long> already = termsHistoryRepository.findTermsIdsByMemberId(memberId);
         return termsService.findCurrentRequired(now).stream().allMatch(t -> already.contains(t.getId()));
+    }
+
+    private Member getMember(Long memberId) {
+        if (memberId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);   // 가입 대기(회원 번호 없음) — findById(null) 은 500 이 된다
+        }
+        return memberRepository.findById(memberId)
+                .filter(m -> m.getStatus() == MemberStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ResultCode.UNAUTHORIZED));
+    }
+
+    /**
+     * 내 정보 태그 — 운영자가 맞춤설정 묶음에 넣은 태그만 고를 수 있다 (#상황 태그 · 없는 번호는 400)
+     * 건강 · 마음 상태는 회원 정보에 두지 않는다는 결정(2026-11-10)을 서버에서도 지킨다
+     */
+    private Set<Tag> memberTags(List<Long> tagIds) {
+        Set<Long> ids = new HashSet<>(tagIds);
+        List<Tag> tags = tagRepository.findAllById(ids);
+        if (tags.size() != ids.size() || tags.stream().anyMatch(t -> t.getTagGroup() == null)) {
+            throw new BusinessException(ResultCode.VALIDATION);
+        }
+        return new HashSet<>(tags);
     }
 
     private Member findOrJoin(LoginMember login, TermsAgreeRequest request) {

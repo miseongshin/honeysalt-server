@@ -35,6 +35,7 @@ import java.util.List;
  * 2026-11-10        shinm              권한 나누기 · 401 · 403 을 { status, code, message } 로
  * 2026-11-10        shinm              CORS · CSRF(쿠키 → X-XSRF-TOKEN 헤더) · 앱 API 는 CSRF 제외
  * 2026-11-10        shinm              로그아웃 POST /api/web/v1/logout
+ * 2026-11-10        shinm              다시 동의할 회원도 탈퇴할 수 있게
  */
 @Configuration
 @RequiredArgsConstructor
@@ -65,6 +66,7 @@ public class SecurityConfig {
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()   // 없는 주소가 401 이 아니라 404 로 가게 (오류 응답은 막지 않는다)
                 .requestMatchers("/api/web/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/web/v1/member/terms").hasAnyRole("PENDING", "USER", "ADMIN")   // 가입 마치기 · 바뀐 약관 다시 동의
+                .requestMatchers(HttpMethod.DELETE, "/api/web/v1/member").hasAnyRole("PENDING", "USER", "ADMIN")       // 탈퇴 — 개정 약관에 동의하지 않아도 탈퇴할 수 있다 (약관 제13조)
                 .requestMatchers("/api/web/v1/member/**").hasAnyRole("USER", "ADMIN")   // 내 정보는 조회(GET)도 로그인
                 .requestMatchers(HttpMethod.GET, "/api/web/**").permitAll()             // 글 조회는 누구나
                 .requestMatchers("/api/web/**").hasAnyRole("USER", "ADMIN")             // 쓰기는 가입을 마친 회원

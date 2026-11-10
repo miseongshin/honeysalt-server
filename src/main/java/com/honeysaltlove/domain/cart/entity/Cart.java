@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * 활동바구니. 웹에서 담고 "내 꿀방울로 보내기" 하면 연결된 앱이 가져간다
+ * 꿀팁 바구니 (생각꿀팁 · 활동 · 꿀방울 스케줄). 웹에서 담고 "내 꿀방울로 보내기" 하면 연결된 앱이 가져간다
  * <pre>
  * - 같은 것은 한 번만 담긴다 · 빼기 = 삭제
  * - 앱은 보낸 것(sentAt 있음)만 받고, 저장을 마친 cart_id 를 알리면(ack) 그 행을 바로 지운다 — 스케줄이면 send_count +1

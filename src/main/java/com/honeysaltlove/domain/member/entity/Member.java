@@ -38,6 +38,7 @@ import java.util.Set;
  * 2026-11-04        shinm              최초 생성
  * 2026-11-06        shinm              태그 연결 (member_tag)
  * 2026-11-10        shinm              탈퇴 (status · withdrawnAt · withdraw) — 개인정보처리방침대로 탈퇴하면 바로 비운다
+ * 2026-11-10        shinm              출생연도 바꾸기
  */
 @Getter
 @Entity
@@ -126,6 +127,15 @@ public class Member extends BaseTimeEntity {
     }
 
     /**
+     * 출생연도를 바꾼다
+     * @author shinm
+     * @since 2026-11-10
+     */
+    public void changeBirthYear(Integer birthYear) {
+        this.birthYear = birthYear;            // null 이면 비운다 (선택 항목)
+    }
+
+    /**
      * 태그를 새로 고른 것으로 바꾼다 (빠진 태그의 연결 행은 지우고, 새 태그는 넣는다)
      * @author shinm
      * @since 2026-11-06
@@ -138,7 +148,7 @@ public class Member extends BaseTimeEntity {
     /**
      * 탈퇴한다. 이 행의 개인정보(소셜 회원번호 · 닉네임 · 출생연도 · 마지막 로그인)를 비우고 내 정보 태그를 지운다
      * 회원 행은 남은 글 · 좋아요 · 신고 기록이 가리켜서 남긴다
-     * 닉네임 백업 · 활동 바구니 · 의견 · 약관 동의 기록 · 앱 연결은 호출한 서비스가 같은 트랜잭션에서 삭제한다
+     * 닉네임 백업 · 꿀팁 바구니 · 의견 · 약관 동의 기록 · 앱 연결은 호출한 서비스가 같은 트랜잭션에서 삭제한다
      * @author shinm
      * @since 2026-11-10
      */

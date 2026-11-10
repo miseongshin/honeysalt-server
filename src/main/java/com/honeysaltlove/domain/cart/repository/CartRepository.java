@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 활동바구니 저장 · 조회 · 가져간 것 지우기
+ * 꿀팁 바구니 저장 · 조회 · 가져간 것 지우기
  *
  * @author shinm
  * @since 2026-11-06
@@ -18,6 +18,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-06        shinm              최초 생성
+ * 2026-11-10        shinm              탈퇴하면 꿀팁 바구니 삭제
  */
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
@@ -35,4 +36,8 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @Modifying
     @Query("delete from Cart c where c.member.id = :memberId and c.id in :cartIds and c.sentAt is not null")
     int deleteTaken(@Param("memberId") Long memberId, @Param("cartIds") Collection<Long> cartIds);
+
+    @Modifying
+    @Query("delete from Cart c where c.member.id = :memberId")
+    int deleteByMemberId(@Param("memberId") Long memberId);   // 탈퇴하면 꿀팁 바구니를 바로 삭제
 }

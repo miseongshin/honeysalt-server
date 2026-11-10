@@ -30,6 +30,7 @@ import java.time.Instant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-06        shinm              최초 생성
+ * 2026-11-10        shinm              연결 끊기 (탈퇴)
  */
 @Getter
 @Entity
@@ -77,6 +78,16 @@ public class MemberAppKey extends BaseTimeEntity {
     public void link(Member member, Instant now) {
         this.member = member;
         this.linkedAt = now;
+    }
+
+    /**
+     * 웹 계정과의 연결을 끊는다 (회원이 탈퇴했을 때) — 앱 키는 남겨서 앱 혼자 계속 쓴다
+     * @author shinm
+     * @since 2026-11-10
+     */
+    public void unlink() {
+        this.member = null;
+        this.linkedAt = null;
     }
 
     /**
