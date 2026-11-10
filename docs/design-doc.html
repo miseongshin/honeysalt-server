@@ -1366,7 +1366,7 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
   const rows = [...document.querySelectorAll('#prog tr[data-id]')];
   const ids = rows.map(r => r.dataset.id);
   const groups = { 'span-1': ['design','base','entity','login','loginui','check1','spec','ui','api','apipost','apireact','batch','unit','check2','applink','appact','e2e','folio'] };
-  const state = { design: { start: '2026-10-30', end: '2026-11-03' }, base: { start: '2026-11-04', end: '2026-11-04' }, entity: { start: '2026-11-04', end: '2026-11-06' }, check1: { start: '2026-11-06', end: '2026-11-07' }, spec: { start: '2026-11-07', end: '2026-11-07' }, login: { start: '2026-11-10', end: '' } }; // 모두에게 보이는 날짜 — 끝난 줄은 여기 적는다
+  const state = { design: { start: '2026-10-30', end: '2026-11-03' }, base: { start: '2026-11-04', end: '2026-11-04' }, entity: { start: '2026-11-04', end: '2026-11-06' }, check1: { start: '2026-11-06', end: '2026-11-07' }, spec: { start: '2026-11-07', end: '2026-11-07' }, login: { start: '2026-11-10', end: '2026-11-10' } }; // 모두에게 보이는 날짜 — 끝난 줄은 여기 적는다
   const st = document.getElementById('saveState');
   // 저장된 값(브라우저 · 공유 DB)이 비어 있으면 파일에 적은 날짜를 지킨다 — 빈 저장값이 완료일을 삭제하지 않게
   const keep = (id, v) => { const f = state[id] || {}; state[id] = { start: (v && v.start) || f.start || '', end: (v && v.end) || f.end || '' }; };
