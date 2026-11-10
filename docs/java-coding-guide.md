@@ -48,7 +48,7 @@ AI 는 기능을 구현하거나 수정하기 전에 이 문서의 규칙과 작
 8. **CORS 와 CSRF**
    - CORS 허용 출처는 운영 웹 주소(`https://honeysaltlove.com`)로 제한한다.
    - 웹은 세션 쿠키 인증을 쓰므로 CSRF 보호를 적용한다.
-   - 앱 API(`/app/**`)는 세션 쿠키 대신 `Authorization` 헤더로 인증하므로 CSRF 검증에서 제외한다.
+   - 앱 API(`/api/app/**`)는 세션 쿠키 대신 `Authorization` 헤더로 인증하므로 CSRF 검증에서 제외한다.
 
 ---
 
@@ -378,7 +378,7 @@ memberRepository.save(member);
 
 - 모든 응답은 `ApiResponse` 로 감싼다. 성공은 `ApiResponse.success(data)`,
   코드가 필요하면 `ApiResponse.toResponseEntity(ResultCode, data)`
-- 새 결과 코드는 `ResultCode` 에 문구와 함께 더한다(2차는 한국어만. 다국어 문구는 3차에)
+- 새 결과 코드는 `ResultCode` 에 더한다. `message` 는 개발과 기록 확인에 쓰는 영어로 작성하고, 화면과 앱은 `code` 에 따라 사용자에게 보여 줄 문구를 정한다
 - 컨트롤러가 **엔티티를 그대로 내보내지 않는다.** 응답 DTO(record)로 바꿔서 낸다
   — 지연 로딩 예외 · 무한 순환 · 내부 칸 노출을 막는다
 - 예외는 한곳(`@RestControllerAdvice`)에서 `ResultCode` 로 바꾼다
@@ -417,9 +417,9 @@ memberRepository.save(member);
 - `spring.jpa.open-in-view: false` — 트랜잭션 밖에서 지연 로딩하지 않는다
 - 목록은 N+1 을 막는다: fetch join · `@EntityGraph` · `default_batch_fetch_size: 100`
 - 숫자(`like_count` · `use_count` · `done_count`)는 호출마다 수정하지 않는다 — 인기 글에 몰려도 로우 락(row lock)으로 기다리지 않게
-  - 활동 수(`use_count` · `done_count` · `helped_count`): 원본(`app_done_log` · `app_helped_log`)에 쌓고, `@Scheduled` 가 1시간마다 활동별로 다시 센다(사용자 수는 앱 키를 겹치지 않게) — 집계 기준 시점을 따로 저장하지 않아 누락되거나 중복 집계될 가능성이 없다
-  - 좋아요(`like_count`): 취소하면 `honey_like` 행을 지워서 더하기로는 줄어든 걸 모른다 — `@Scheduled` 가 1분마다 다시 세어 맞춘다(1분 동안은 실제 좋아요 수와 다를 수 있다) · 글의 `like_count` 는 `UPDATE` 쿼리로 갱신한다 — 엔티티로 고치면 글의 수정일까지 바뀐다
-- 지운 글은 `deleted_at` 으로 숨긴다(`@SQLRestriction("deleted_at is null")`)
+  - 다시 집계하는 방식: 원본에 기록이 생기면 저장이 끝난 뒤 '변경됨' 표시를 켠다. `@Scheduled` 는 정해진 주기마다 표시를 확인하고, 표시가 켜져 있을 때만 다시 집계한다. 집계하기 전에 표시를 끈다. 좋아요는 1분마다, 활동 수는 1시간마다 확인한다. 집계 기준 시점을 따로 저장하지 않아 누락되거나 중복 집계될 가능성이 없다
+  - 활동 수(`use_count` · `done_count` · `helped_count`): 원본(`app_done_log` · `app_helped_log`)을 1시간 주기로 다시 집계한다(사용자 수는 앱 키가 중복되지 않게 센다)
+  - 좋아요(`like_count`): 취소하면 `honey_like` 행을 삭제해서 더하기로는 줄어든 것을 알 수 없다 — 1분 주기로 다시 집계한다(1분 동안은 실제 좋아요 수와 다를 수 있다) · 글의 `like_count` 는 `UPDATE` 쿼리로 갱신한다 — 엔티티로 고치면 글의 수정일까지 바뀐다
 
 ---
 

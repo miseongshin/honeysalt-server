@@ -216,6 +216,9 @@ table.prog tr.p3 td { border-top: 6px solid var(--pg-gap); }
 
 .cols:has(> #prog) { max-height: none !important; overflow-x: auto !important; }
 table.prog td.st { white-space: nowrap; }
+table.prog tr.sub td.ko { padding-left: 1.8em; } /* 나눈 작업(9.1 …)은 한 번 들여 쓴다 */
+table.prog tr.parent td { color: var(--pg-sub); }
+table.prog tr.parent td.ko { color: var(--fg); }
 table.prog .pace { font-size: 12px; font-weight: 700; margin-top: 3px; }
 table.prog .pace.ahead { color: #2f7a4a; }
 table.prog .pace.behind { color: #c0392b; }
@@ -531,6 +534,7 @@ erDiagram
   member ||--o{ honey_comment : "댓글을 작성한다"
   member ||--o{ honey_like : "좋아요를 누른다"
   member ||--o{ honey_complaint : "신고한다"
+  member ||--o{ honey_complaint : "신고 대상이 된다"
 
   honey_comment["honey_comment · 댓글"] {
     bigint comment_id PK "기본키"
@@ -556,6 +560,7 @@ erDiagram
   honey_complaint["honey_complaint · 신고"] {
     bigint complaint_id PK "기본키"
     bigint member_id FK "신고한 회원"
+    bigint reported_member_id FK "신고 대상 회원 (글쓴이)"
     varchar target_type "고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글"
     bigint target_id "대상 번호"
     varchar reason "광고 · 욕설 · 부적절 · 기타"
@@ -583,12 +588,14 @@ erDiagram
   member["member · 회원"] {
     bigint member_id PK "기본키"
     varchar provider "GOOGLE"
-    varchar provider_uid "provider와 묶어 UK"
-    varchar nickname UK "닉네임"
+    varchar provider_uid "provider와 묶어 UK · 탈퇴하면 null"
+    varchar nickname UK "닉네임 · 탈퇴하면 null"
     int birth_year "출생연도 · 선택"
     varchar lang "언어 · 한국어(ko) 영어(en) …"
     varchar role "USER ADMIN"
-    timestamptz last_login_at "마지막 로그인 · 휴면 판단"
+    varchar status "ACTIVE WITHDRAWN"
+    timestamptz withdrawn_at "탈퇴일"
+    timestamptz last_login_at "마지막 로그인"
     timestamptz created_at "등록일"
     timestamptz updated_at "수정일"
   }
@@ -634,7 +641,9 @@ erDiagram
   }
   terms["terms · 약관"] {
     bigint terms_id PK "기본키"
+    varchar service "HONEYSALTLOVE HONEY_DROPS"
     varchar type "SERVICE PRIVACY"
+    varchar lang "언어 · ko en ja"
     varchar version "버전 · 예: 2026-11"
     text body "약관 내용"
     boolean required "필수 여부"
@@ -722,7 +731,7 @@ erDiagram
     <div style="margin-left:20px;display:flex;flex-direction:column;gap:10px;">
     <ul class="kv legendline stack"><li><span>인증</span><div class="d">세션 쿠키</div></li></ul>
     <h4 style="margin:12px 0 4px;margin-left:0 !important;">1) 로그인 · 회원</h4>
-    <div class="cols plainbox"><table class="api"><thead><tr><th>메서드</th><th>주소</th><th>설명</th><th>로그인</th></tr></thead><tbody><tr><td>GET</td><td><code>/oauth2/authorization/google</code></td><td>구글 로그인 시작 · Spring 기본 주소 (/api 밖) · 처음이면 닉네임 화면으로</td><td></td></tr><tr><td>GET</td><td><code>/api/web/v1/terms</code></td><td>약관 확인 및 가입 동의 화면</td><td></td></tr><tr><td>GET · PATCH · DELETE</td><td><code>/api/web/v1/member</code></td><td>내 정보 · 수정 (닉네임 · 출생연도 · 태그) · 탈퇴</td><td>로그인</td></tr><tr><td>GET</td><td><code>/api/web/v1/member/posts?type=tip|activity|schedule|comment&amp;page=</code></td><td>내가 쓴 글</td><td>로그인</td></tr><tr><td>POST</td><td><code>/api/web/v1/logout</code></td><td>로그아웃 · 세션 삭제</td><td>로그인</td></tr><tr><td>POST</td><td><code>/api/web/v1/member/terms</code></td><td>약관 동의 · member_terms_history</td><td>로그인</td></tr></tbody></table></div>
+    <div class="cols plainbox"><table class="api"><thead><tr><th>메서드</th><th>주소</th><th>설명</th><th>로그인</th></tr></thead><tbody><tr><td>GET</td><td><code>/oauth2/authorization/google</code></td><td>구글 로그인 시작 · Spring 기본 주소 (/api 밖) · 처음이면 닉네임 화면으로</td><td></td></tr><tr><td>GET</td><td><code>/api/web/v1/terms?service=&amp;lang=</code></td><td>약관 확인 및 가입 동의 화면 · 서비스와 언어로 고른다 (꿀방울 앱용 <code>/api/app/v1/terms</code> 는 개정할 때 만든다)</td><td></td></tr><tr><td>GET · PATCH · DELETE</td><td><code>/api/web/v1/member</code></td><td>내 정보 · 수정 (닉네임 · 출생연도 · 태그) · 탈퇴</td><td>로그인</td></tr><tr><td>GET</td><td><code>/api/web/v1/member/posts?type=tip|activity|schedule|comment&amp;page=</code></td><td>내가 쓴 글</td><td>로그인</td></tr><tr><td>POST</td><td><code>/api/web/v1/logout</code></td><td>로그아웃 · 세션 삭제</td><td>로그인</td></tr><tr><td>POST</td><td><code>/api/web/v1/member/terms</code></td><td>약관 동의 · member_terms_history</td><td>로그인</td></tr></tbody></table></div>
     <h4 style="margin:12px 0 4px;margin-left:0 !important;">2) 앱 연결</h4>
     <div class="cols plainbox"><table class="api"><thead><tr><th>메서드</th><th>주소</th><th>설명</th><th>로그인</th></tr></thead><tbody><tr><td>POST</td><td><code>/api/web/v1/member/app-link</code></td><td>앱에 표시된 연결 코드(6자리)를 입력해 앱 키를 내 계정에 연결</td><td>로그인</td></tr><tr><td>POST</td><td><code>/api/web/v1/app-entry</code></td><td>웹 바로 접속 · 앱에서 받은 일회용 토큰(1분 안에 한 번만 쓸 수 있음)을 확인한 뒤 세션 쿠키를 발급</td><td></td></tr></tbody></table></div>
     <h4 style="margin:12px 0 4px;margin-left:0 !important;">3) 고민 · 꿀팁</h4>
@@ -828,7 +837,7 @@ X-App-Key: &lt;앱 키&gt;
       <li><span>가입</span><div class="d">없으면 가입 · 약관 동의(member_terms_history) · 닉네임 2~12자, 띄어쓰기 없음, 비우면 자동 생성(아침꿀벌23)</div></li>
       <li><span>내 정보</span><div class="d">출생연도 · 좋아하는 것 · 활동량 · 시간대 · 모두 선택 · 태그는 member_tag 로 저장</div></li>
       <li><span>닉네임 변경</span><div class="d">바꾸기 전 이름을 member_nickname_history 에 남긴다</div></li>
-      <li><span>탈퇴</span><div class="d">내 정보 수정 맨 아래 · 개인정보는 삭제하고, 쓴 글은 남긴다</div></li>
+      <li><span>탈퇴</span><div class="d">내 정보 수정 맨 아래 · 글 · 댓글 · 좋아요는 남기고 작성자는 '탈퇴한 회원'으로 표시한다 (다른 회원의 꿀팁 · 스케줄이 내 활동을 쓰고 있어도 깨지지 않게) · 탈퇴하면 같은 트랜잭션에서 소셜 회원번호 · 닉네임 · 출생연도 · 마지막 로그인 시각을 비우고, 내 정보 태그 · 닉네임 백업 · 활동 바구니 · 의견 보내기 · 약관 동의 기록 · 앱 연결을 삭제한다 (탈퇴 취소 기능은 두지 않는다) · 신고 기록은 탈퇴와 상관없이 신고일부터 1년 보관한 뒤 스케줄러가 삭제한다 — 회원 행은 남은 글이 가리키고 있어(FK) 삭제하지 않고, 누구인지 알 수 없는 빈 행으로 둔다 · 탈퇴 화면에 "글은 남습니다. 지우려면 먼저 내 글에서 삭제하세요" 를 안내한다 · 탈퇴한 사람이 같은 소셜 계정으로 다시 가입하면 새 회원으로 가입한다 — 예전 글은 이어지지 않는다 (본인 증명이 복잡해서)</div></li>
     </ul>
     <h4 style="margin:12px 0 4px;margin-left:20px;">1) OAuth (구글)</h4>
     <div style="margin-left:20px;display:flex;flex-direction:column;gap:10px;">
@@ -917,10 +926,14 @@ X-App-Key: &lt;앱 키&gt;
       <tr data-id="entity"><td></td><td class="ko">3. 엔티티</td><td class="n">전체 · Flyway · 로컬 · 서버 적용</td><td class="hrs">4~6</td><td class="st" id="st-entity">예정</td><td><input type="date" id="start-entity" aria-label="엔티티 시작"></td><td><input type="date" id="end-entity" aria-label="엔티티 완료"></td><td class="wd" id="wd-entity"></td></tr>
       <tr data-id="check1"><td></td><td class="ko">4. 서버 배포</td><td class="n">CI/CD (Jenkins — Testcontainers 테스트 · 서버 배포)</td><td class="hrs">6~10</td><td class="st" id="st-check1">예정</td><td><input type="date" id="start-check1" aria-label="서버 배포 시작"></td><td><input type="date" id="end-check1" aria-label="서버 배포 완료"></td><td class="wd" id="wd-check1"></td></tr>
       <tr data-id="spec"><td></td><td class="ko">5. API 명세</td><td class="n">웹 · 앱 API 주소 · DTO · 응답 형식 · 오류 형식 · Swagger</td><td class="hrs">2~3</td><td class="st" id="st-spec">예정</td><td><input type="date" id="start-spec" aria-label="API 명세 시작"></td><td><input type="date" id="end-spec" aria-label="API 명세 완료"></td><td class="wd" id="wd-spec"></td></tr>
-      <tr data-id="login"><td></td><td class="ko">6. 로그인</td><td class="n">구글만 · 세션 · CORS · CSRF · 닉네임(비우면 자동 생성) · 내 정보(태그) · 앱 키 발급 · 탈퇴</td><td class="hrs">6~8</td><td class="st" id="st-login">예정</td><td><input type="date" id="start-login" aria-label="로그인 시작"></td><td><input type="date" id="end-login" aria-label="로그인 완료"></td><td class="wd" id="wd-login"></td></tr>
+      <tr data-id="login"><td></td><td class="ko">6. 로그인</td><td class="n">약관(이용약관 · 개인정보처리방침 작성 · 가입할 때 동의 · 개정되면 다시 동의) · 구글 먼저(소셜을 늘릴 수 있는 구조) · 세션 · CORS · CSRF · 닉네임(비우면 자동 생성) · 내 정보(태그) · 앱 키 발급 · 탈퇴</td><td class="hrs">6~8</td><td class="st" id="st-login">예정</td><td><input type="date" id="start-login" aria-label="로그인 시작"></td><td><input type="date" id="end-login" aria-label="로그인 완료"></td><td class="wd" id="wd-login"></td></tr>
       <tr data-id="loginui"><td></td><td class="ko">7. 로그인 화면</td><td class="n">로그인 창 · 닉네임 · 내 정보 · 내 계정(내가 쓴 글) 틀</td><td class="hrs">4~6</td><td class="st" id="st-loginui">예정</td><td><input type="date" id="start-loginui" aria-label="로그인 화면 시작"></td><td><input type="date" id="end-loginui" aria-label="로그인 화면 완료"></td><td class="wd" id="wd-loginui"></td></tr>
       <tr data-id="ui"><td></td><td class="ko">8. 화면</td><td class="n">메인 · 목록 · 상세(고민 · 생각 · 활동 · 스케줄) · 활동 바구니 · 글쓰기 팝업 · 가짜 데이터로</td><td class="hrs">10~14</td><td class="st" id="st-ui">예정</td><td><input type="date" id="start-ui" aria-label="화면 시작"></td><td><input type="date" id="end-ui" aria-label="화면 완료"></td><td class="wd" id="wd-ui"></td></tr>
-      <tr data-id="api"><td></td><td class="ko">9. API 구현</td><td class="n">고민 · 생각꿀팁 · 활동꿀팁 · 활동 · 스케줄 · 좋아요 · 댓글 · 태그 · 활동 바구니 · 의견 · 기본 데이터(태그 · 약관) → 가짜 데이터 교체</td><td class="hrs">8~13</td><td class="st" id="st-api">예정</td><td><input type="date" id="start-api" aria-label="API 구현 시작"></td><td><input type="date" id="end-api" aria-label="API 구현 완료"></td><td class="wd" id="wd-api"></td></tr>
+      <tr class="parent"><td></td><td class="ko">9. API</td><td class="n">아래 네 작업으로 나눈다</td><td>10~15</td><td></td><td></td><td></td><td></td></tr>
+      <tr data-id="api" class="sub"><td></td><td class="ko">1. 공통</td><td class="n">응답 형식(ApiResponse · ResultCode) · 예외 처리 · Swagger · 기본 데이터(태그 · 약관)</td><td class="hrs">2~3</td><td class="st" id="st-api">예정</td><td><input type="date" id="start-api" aria-label="API 공통 시작"></td><td><input type="date" id="end-api" aria-label="API 공통 완료"></td><td class="wd" id="wd-api"></td></tr>
+      <tr data-id="apipost" class="sub"><td></td><td class="ko">2. 꿀팁 API</td><td class="n">고민 · 생각꿀팁 · 활동꿀팁 · 활동 · 스케줄 · 검색 색인</td><td class="hrs">3~5</td><td class="st" id="st-apipost">예정</td><td><input type="date" id="start-apipost" aria-label="꿀팁 API 시작"></td><td><input type="date" id="end-apipost" aria-label="꿀팁 API 완료"></td><td class="wd" id="wd-apipost"></td></tr>
+      <tr data-id="apireact" class="sub"><td></td><td class="ko">3. 반응 API</td><td class="n">좋아요 · 댓글 · 신고 · 태그 · 활동 바구니 · 의견 → 화면의 가짜 데이터를 API 로 교체</td><td class="hrs">3~4</td><td class="st" id="st-apireact">예정</td><td><input type="date" id="start-apireact" aria-label="반응 API 시작"></td><td><input type="date" id="end-apireact" aria-label="반응 API 완료"></td><td class="wd" id="wd-apireact"></td></tr>
+      <tr data-id="batch" class="sub"><td></td><td class="ko">4. 스케줄러</td><td class="n">서버가 정해진 시각마다 혼자 도는 작업(@Scheduled) — 좋아요 수 다시 세기(1분) · 활동 사용자 수 · 활동 수 다시 세기(1시간) · 도움돼요 수 맞추기(1시간) · 태그 사용 횟수 다시 세기(1시간) · 1년 지난 신고 기록 삭제(하루 한 번)</td><td class="hrs">2~3</td><td class="st" id="st-batch">예정</td><td><input type="date" id="start-batch" aria-label="스케줄러 시작"></td><td><input type="date" id="end-batch" aria-label="스케줄러 완료"></td><td class="wd" id="wd-batch"></td></tr>
       <tr data-id="unit"><td></td><td class="ko">10. 단위 테스트</td><td class="n">서비스 · 리포지토리 (JUnit)</td><td class="hrs">4~6</td><td class="st" id="st-unit">예정</td><td><input type="date" id="start-unit" aria-label="단위 테스트 시작"></td><td><input type="date" id="end-unit" aria-label="단위 테스트 완료"></td><td class="wd" id="wd-unit"></td></tr>
       <tr data-id="check2"><td></td><td class="ko">11. 통합 테스트</td><td class="n">화면 + API 연결 · 버그</td><td class="hrs">4~7</td><td class="st" id="st-check2">예정</td><td><input type="date" id="start-check2" aria-label="2차 통합 테스트 시작"></td><td><input type="date" id="end-check2" aria-label="2차 통합 테스트 완료"></td><td class="wd" id="wd-check2"></td></tr>
       <tr data-id="applink"><td></td><td class="ko">12. 앱 연결</td><td class="n">앱 키(Bearer) 검증 · 재발급 · 보낸 것 가져가기(cart) · 받음 알림(ack)</td><td class="hrs">6~10</td><td class="st" id="st-applink">예정</td><td><input type="date" id="start-applink" aria-label="앱 연결 시작"></td><td><input type="date" id="end-applink" aria-label="앱 연결 완료"></td><td class="wd" id="wd-applink"></td></tr>
@@ -970,13 +983,15 @@ const G = [
   ['member', '회원', '구글 계정으로만 들어온다(2차). 비밀번호 없음', [
     ['번호','member_id','자동 증가 번호','key'],
     ['로그인 방식','provider','GOOGLE (나중에 KAKAO · NAVER)'],
-    ['소셜 쪽 번호','provider_uid','로그인 방식과 묶어서 겹치면 안 됨'],
-    ['닉네임','nickname','2~12자, 겹치면 안 됨. 비우면 자동 (아침꿀벌23)'],
+    ['소셜 쪽 번호','provider_uid','로그인 방식과 묶어서 겹치면 안 됨 · 탈퇴하면 비운다(null) — UQ 는 null 끼리 겹쳐도 되므로, 탈퇴한 사람이 다시 가입하면 새 회원 행을 만든다','opt'],
+    ['닉네임','nickname','2~12자, 겹치면 안 됨. 비우면 자동 (아침꿀벌23) · 탈퇴하면 비운다(null) — 화면은 \'탈퇴한 회원\'','opt'],
     ['화면 언어','lang','한국어(ko) · 영어(en) · 일본어(ja) … · 기본 한국어(ko)'],
     ['출생연도','birth_year','생년월일에서 연도만 저장 · 나이대 계산','opt'],
     ['권한','role','USER · ADMIN'],
+    ['상태','status','활동(ACTIVE) · 탈퇴(WITHDRAWN)'],
+    ['탈퇴일','withdrawn_at','탈퇴하면 개인정보를 바로 삭제하고, 회원 행은 글이 가리켜서 남긴다','opt'],
     ['가입일','created_at','처음 로그인해 가입한 때'],
-    ['마지막 로그인','last_login_at','가장 최근 로그인 · 휴면 판단용','opt']]],
+    ['마지막 로그인','last_login_at','가장 최근 로그인','opt']]],
   ['member_nickname_history', '닉네임 백업', '닉네임을 바꿀 때마다 바꾸기 전 이름을 남긴다', [
     ['번호','nickname_history_id','자동 증가 번호','key'],
     ['회원','member_id','어느 회원인지 · member 를 가리킴','link'],
@@ -1067,13 +1082,14 @@ const G = [
   ['honey_complaint', '신고', '고민 · 생각꿀팁 · 스케줄 · 활동 · 댓글을 한 테이블에서. 한 사용자는 대상마다 한 번만 등록할 수 있다 · 수정할 수 없음', [
     ['번호','complaint_id','자동 증가 번호','key'],
     ['회원','member_id','신고한 회원','link'],
+    ['신고 대상 회원','reported_member_id','신고한 글을 쓴 회원 · 글이 지워져도 같은 회원이 반복해서 신고됐는지 확인한다','link'],
     ['대상 종류','target_type','고민(WORRY) · 생각꿀팁(THOUGHT_TIP) · 스케줄(SCHEDULE) · 활동(ACTIVITY) · 댓글(COMMENT)'],
     ['대상 번호','target_id','FK 없음'],
     ['이유','reason','광고(AD) · 욕설(ABUSE) · 부적절(INAPPROPRIATE) · 기타(ETC)'],
     ['설명','complaint_text','신고 사유가 ‘기타’일 때 입력하는 짧은 설명','opt'],
     ['처리 시각','handled_at','관리자가 확인한 시각 · 비어 있으면 미처리','opt'],
     ['신고한 때','created_at','']],
-   '색인 (target_type, target_id) · 같은 대상 신고 수 / 미처리만 색인 (created_at) · 미처리 신고 목록(운영자) · UQ (member_id, target_type, target_id) · 같은 대상에 세 번째 신고가 접수되면 관리자에게 이메일을 한 번 발송한다 (자동 숨김 없음 · 관리자가 보고 숨긴다)'],
+   '색인 (target_type, target_id) · 같은 대상 신고 수 / 미처리만 색인 (created_at) · 미처리 신고 목록(운영자) · UQ (member_id, target_type, target_id) · 색인 (reported_member_id, created_at) · 반복 신고 확인 · 1년 지난 신고 삭제 · 신고일부터 1년 보관한 뒤 삭제한다 (탈퇴해도 같다) · 같은 대상에 세 번째 신고가 접수되면 관리자에게 이메일을 한 번 발송한다 (자동 숨김 없음 · 관리자가 보고 숨긴다)'],
   ['cart', '활동 바구니', '활동 바구니 · 담으면 저장되고, 앱이 앱 토큰으로 가져간다', [
     ['번호','cart_id','자동 증가 번호','key'],
     ['회원','member_id','담은 회원','link'],
@@ -1175,14 +1191,16 @@ const G = [
    'UQ (target_type, target_id) · 글 하나에 한 줄 · 색인 GIN (search_text gin_trgm_ops) — pg_trgm 으로 부분 글자 검색 · 검색어에 연속된 3글자 이상이 있을 때 색인을 사용할 수 있고, 3글자 미만 검색어는 전체를 확인한다 (느려지면 pg_bigm 검토) · 숨긴 글은 줄이 없어 검색에 안 걸린다 · 좋아요순 · 최신순 정렬은 찾은 키(target_type, target_id)로 원본 글과 이어서 원본의 like_count · created_at 으로 한다 · 어긋나면 색인을 처음부터 다시 만드는 기능을 둔다 · 만들 때 새 V 파일']
  ]],
  ['앱 연결 (2차)', [
-  ['terms', '약관', '약관 원문과 버전 · 시행 전 초안은 고치고, 시행 뒤에는 새 버전을 넣는다', [
+  ['terms', '약관', '약관 원문과 버전 · 시행 전 초안은 고치고, 시행 뒤에는 새 버전을 넣는다 · 꿀방울 약관도 담는다. 지금은 vue 정적 문서와 같은 내용이고, 개정할 때부터 이 테이블이 원본이 된다', [
     ['번호','terms_id','자동 증가 번호','key'],
+    ['서비스','service','honeysaltlove 사이트(HONEYSALTLOVE) · 꿀방울(HONEY_DROPS) · honeysaltlove 회원 가입은 사이트 약관에 동의한다'],
     ['종류','type','이용약관(SERVICE) · 개인정보처리방침(PRIVACY)'],
+    ['언어','lang','ko · en · ja 등 · 같은 버전을 언어마다 한 행씩'],
     ['버전','version','예: 2026-11'],
-    ['내용','body','약관 전문'],
+    ['내용','body','약관 전문 · 블록 JSON (문단 · 목록 등, 꿀방울 문서와 같은 모양)'],
     ['필수','required','true 면 동의해야 가입 · 사용'],
     ['시행일','effective_at','이 버전이 적용되는 날']],
-   'UQ (type, version)'],
+   'UQ (service, type, lang, version)'],
   ['member_terms_history', '약관 동의 기록', '누가 어떤 약관 버전에 동의했는지 · 쌓기만 함', [
     ['번호','terms_history_id','자동 증가 번호','key'],
     ['회원','member_id','동의한 회원','link'],
@@ -1237,16 +1255,16 @@ const JPA = [
  ['댓글 · 좋아요 (ERD 5)', [
   ['HoneyComment','honey_comment','',[['HoneyActivity activity','@ManyToOne · 둘 중 하나'],['HoneySchedule schedule','@ManyToOne · 둘 중 하나'],['Member member','@ManyToOne'],['String commentText',''],['Lang lang',''],['Visibility visibility','@Embedded'],['int likeCount','']],['edit(String)','hide()','show()']],
   ['HoneyLike','honey_like','',[['Member member','@ManyToOne'],['TargetType targetType',''],['Long targetId','FK 없음']],[]],
-  ['HoneyComplaint','honey_complaint','',[['Member member','@ManyToOne'],['TargetType targetType',''],['Long targetId','FK 없음'],['ComplaintReason reason',''],['String complaintText',''],['Instant handledAt','']],['handle()']],
+  ['HoneyComplaint','honey_complaint','',[['Member member','@ManyToOne'],['Member reportedMember','@ManyToOne'],['TargetType targetType',''],['Long targetId','FK 없음'],['ComplaintReason reason',''],['String complaintText',''],['Instant handledAt','']],['handle()']],
  ]],
  ['회원', [
-  ['Member','member','',[['Provider provider',''],['String providerUid',''],['String nickname',''],['Integer birthYear',''],['Lang lang',''],['Role role',''],['Instant lastLoginAt',''],['Set<Tag> tags','@ManyToMany']],['changeNickname(String)','recordLogin(Instant)']],
+  ['Member','member','',[['Provider provider',''],['String providerUid',''],['String nickname',''],['Integer birthYear',''],['Lang lang',''],['Role role',''],['MemberStatus status',''],['Instant withdrawnAt',''],['Instant lastLoginAt',''],['Set<Tag> tags','@ManyToMany']],['changeNickname(String)','recordLogin(Instant)','withdraw(Instant)']],
   ['MemberNicknameHistory','member_nickname_history','',[['Member member','@ManyToOne'],['String nickname','']],[]],
   ['Cart','cart','',[['Member member','@ManyToOne'],['CartTargetType targetType',''],['Long targetId','FK 없음'],['String days',''],['Instant sentAt','']],['markSent()']],
   ['Feedback','feedback','',[['Member member','@ManyToOne'],['FeedbackType type',''],['String feedbackText',''],['Lang lang',''],['Instant handledAt','']],['handle(Instant)']],
   ['MemberAppKey','member_app_key','',[['String appKey',''],['String appHash',''],['Member member','@ManyToOne · NULL 가능'],['Instant linkedAt',''],['Instant lastUsedAt','']],['link(Member)','renewSecret(String)']],
   ['MemberTermsHistory','member_terms_history','',[['Member member','@ManyToOne'],['Terms terms','@ManyToOne']],[]],
-  ['Terms','terms','',[['TermsType type',''],['String version',''],['String body','text'],['boolean required',''],['Instant effectiveAt','']],[]],
+  ['Terms','terms','',[['ServiceType service',''],['TermsType type',''],['Lang lang',''],['String version',''],['String body','text'],['boolean required',''],['Instant effectiveAt','']],[]],
  ]],
  ['검색', [
   ['SearchIndex','search_index','log',[['TargetType targetType',''],['Long targetId','FK 없음'],['String searchText','text'],['Lang lang','']],[]],
@@ -1264,7 +1282,9 @@ const JPA = [
   ['ComplaintReason','','enum',[['AD · ABUSE · INAPPROPRIATE · ETC','']],[]],
   ['Provider','','enum',[['GOOGLE','']],[]],
   ['Role','','enum',[['USER · ADMIN','']],[]],
+  ['MemberStatus','','enum',[['ACTIVE · WITHDRAWN','']],[]],
   ['TermsType','','enum',[['SERVICE · PRIVACY','']],[]],
+  ['ServiceType','','enum',[['HONEYSALTLOVE · HONEY_DROPS','']],[]],
   ['FeedbackType','','enum',[['IDEA · SYSTEM · INCONVENIENCE · ETC','']],[]],
  ]],
 ];
@@ -1344,14 +1364,14 @@ window.addEventListener('afterprint', () => { __printOpen.forEach(d => d.open = 
 (function () {
   const rows = [...document.querySelectorAll('#prog tr[data-id]')];
   const ids = rows.map(r => r.dataset.id);
-  const groups = { 'span-1': ['design','base','entity','login','loginui','check1','spec','ui','api','unit','check2','applink','appact','e2e','folio'] };
+  const groups = { 'span-1': ['design','base','entity','login','loginui','check1','spec','ui','api','apipost','apireact','batch','unit','check2','applink','appact','e2e','folio'] };
   const state = { design: { start: '2026-10-30', end: '2026-11-03' }, base: { start: '2026-11-04', end: '2026-11-04' }, entity: { start: '2026-11-04', end: '2026-11-06' }, check1: { start: '2026-11-06', end: '2026-11-07' }, spec: { start: '2026-11-07', end: '2026-11-07' } }; // 모두에게 보이는 날짜 — 끝난 줄은 여기 적는다
   const st = document.getElementById('saveState');
   // 저장된 값(브라우저 · 공유 DB)이 비어 있으면 파일에 적은 날짜를 지킨다 — 빈 저장값이 완료일을 삭제하지 않게
   const keep = (id, v) => { const f = state[id] || {}; state[id] = { start: (v && v.start) || f.start || '', end: (v && v.end) || f.end || '' }; };
   const fmt = d => d ? d.slice(5).replace('-', '/') : '';
   // 쉰 날 — 주말이 아닌데 일하지 않은 날. 작업일 · 예정보다 늦음/빠름에서 뺀다
-  const OFF = [];
+  const OFF = ['2026-11-09'];
   const ymdStr = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
   const isWorkDay = x => x.getDay() % 6 !== 0 && !OFF.includes(ymdStr(x));
   const countWork = (a, b) => { let n = 0; for (const x = new Date(a); x <= b; x.setDate(x.getDate() + 1)) if (isWorkDay(x)) n++; return n; };
