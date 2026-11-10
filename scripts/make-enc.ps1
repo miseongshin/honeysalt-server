@@ -1,9 +1,10 @@
 ﻿# ======================================================================
-# DB 비밀번호 두 개(개발 · 운영)를 jasypt ENC(...) 로 바꾼다
+# 비밀값(DB 비밀번호 · 구글 보안 비밀 등)을 jasypt ENC(...) 로 바꾼다
 # 마스터 키는 직접 치지 않는다 — 앱이 쓰는 키를 그대로 가져와서, 키가 어긋날 일이 없다
 #   1) 환경변수 JASYPT_ENCRYPTOR_PASSWORD
 #   2) 없으면 IntelliJ 실행 설정(.idea/workspace.xml)의 같은 이름 값
-# 입력한 비밀번호는 화면 · 명령 기록에 남지 않는다. 결과의 ENC 두 줄만 yml 에 넣는다
+# 이름과 값을 하나씩 묻고, 이름을 비우고 Enter 를 누르면 끝난다
+# 입력한 값은 화면 · 명령 기록에 남지 않는다. 결과의 ENC 줄만 yml 에 넣는다
 #
 # 실행 (저장소 맨 위에서):
 #   powershell -ExecutionPolicy Bypass -File scripts\make-enc.ps1
@@ -14,6 +15,7 @@
 # DATE              AUTHOR             NOTE
 # ----------------------------------------------------------------------
 # 2026-11-04        shinm              최초 생성
+# 2026-11-10        shinm              DB 비밀번호 두 개만 묻던 것을 이름 · 값을 하나씩 묻게 바꾼다
 # ======================================================================
 
 $ErrorActionPreference = 'Stop'
@@ -56,11 +58,15 @@ function Enc($plain) {
     return '실패 — 키에 한글 · 공백이 있는지 확인'
 }
 
-$dev  = Ask '개발 DB 비밀번호 (honeysalt_local)'
-$prod = Ask '운영 DB 비밀번호 (honeysalt_prod)'
-''
-'개발: ' + (Enc $dev)
-'운영: ' + (Enc $prod)
-''
-'application-local.yml · application-prod.yml 의 password 에 넣는다'
-Remove-Variable key, dev, prod
+# 이름은 결과를 알아보려고 받는다 (예: 구글 보안 비밀) — 화면에 보인다
+while ($true) {
+    $name = Read-Host '무엇을 바꿀지 이름 (끝내려면 그냥 Enter)'
+    if (-not $name) { break }
+    $plain = Ask "$name 값"
+    if (-not $plain) { '값이 비어 있어 건너뛴다'; continue }
+    "$name : " + (Enc $plain)
+    ''
+    Remove-Variable plain
+}
+'ENC(...) 줄을 application-local.yml · application-prod.yml 의 해당 자리에 넣는다'
+Remove-Variable key
