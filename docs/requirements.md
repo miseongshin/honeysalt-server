@@ -99,7 +99,7 @@
 
 1. [ ] 기본 데이터: 태그 목록이 정해지면 `tag` 기본 데이터를 새 V 파일로 넣는다. (약관 `terms` 기본 데이터는 6. 로그인에서 넣었다 — V6 꿀방울 · V7 honeysaltlove)
 2. [x] 공통 응답 · 오류: 5절에서 정한 응답 형식과 오류 code 목록을 코드로 만든다. 클래스 이름은 java-coding-guide 를 따른다 (`ApiResponse<T>`, `ResultCode`, `BusinessException`, `@RestControllerAdvice`). (2026-11-10 · 로그인 작업에서 앞당겨 만들었다 — `GlobalExceptionHandler` · 시큐리티 401 · 403 도 같은 모양 · `TERMS_REQUIRED` 추가)
-3. [ ] Swagger: `springdoc-openapi` 를 붙인다. local 에서만 켜고, `application-prod.yml` 에서는 끈다.
+3. [x] Swagger: `springdoc-openapi` 를 붙인다. local 에서만 켜고, `application-prod.yml` 에서는 끈다. (2026-11-10 · 로컬 주소 http://localhost:8080/swagger-ui.html)
 4. [ ] 엔티티 규칙 확인: 엔티티를 다 만든 뒤 9절 맨 끝에 한 번 더 확인한다. 연관은 모두 `LAZY`, enum 은 `@Enumerated(STRING)` 이고, 값은 setter 없이 이름 있는 메서드로만 바꾼다 (예: `hide("AI: 광고")`).
 
 ### 2. 꿀팁 API

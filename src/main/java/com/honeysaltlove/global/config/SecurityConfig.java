@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -36,15 +38,19 @@ import java.util.List;
  * 2026-11-10        shinm              CORS · CSRF(쿠키 → X-XSRF-TOKEN 헤더) · 앱 API 는 CSRF 제외
  * 2026-11-10        shinm              로그아웃 POST /api/web/v1/logout
  * 2026-11-10        shinm              다시 동의할 회원도 탈퇴할 수 있게 · 앱 키 발급은 로그인 없이
+ * 2026-11-10        shinm              Swagger 주소 열기 — prod 프로필이면 열지 않는다 (yml 에서도 끈다)
  */
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_PATHS = {"/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**"};   // 운영은 열지 않는다 (로그인이 필요한 주소로 남는다)
+
     private final CustomOidcUserService customOidcUserService;
     private final LoginSuccessHandler loginSuccessHandler;
     private final LoginFailureHandler loginFailureHandler;
     private final SecurityErrorHandler securityErrorHandler;
+    private final Environment environment;
 
     @Value("${app.front-url:http://localhost:3000}")
     private String frontUrl;                   // CORS 허락 주소 · local http://localhost:3000 · prod https://honeysaltlove.com
@@ -60,18 +66,23 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        boolean prod = environment.acceptsProfiles(Profiles.of("prod"));
         http
-            .authorizeHttpRequests(auth -> auth                    // 위에서부터 먼저 맞는 줄이 적용된다
-                .requestMatchers("/actuator/health").permitAll()   // nginx · 배포 후 서버 정상 여부 확인
-                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()   // 없는 주소가 401 이 아니라 404 로 가게 (오류 응답은 막지 않는다)
-                .requestMatchers(HttpMethod.POST, "/api/app/v1/keys").permitAll()   // 앱 키 발급 — 앱이 처음 실행할 때 (앱 키가 아직 없다)
-                .requestMatchers("/api/web/v1/admin/**").hasRole("ADMIN")
+            .authorizeHttpRequests(auth -> {                       // 위에서부터 먼저 맞는 줄이 적용된다
+                auth.requestMatchers("/actuator/health").permitAll()   // nginx · 배포 후 서버 정상 여부 확인
+                    .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()   // 없는 주소가 401 이 아니라 404 로 가게 (오류 응답은 막지 않는다)
+                    .requestMatchers(HttpMethod.POST, "/api/app/v1/keys").permitAll();   // 앱 키 발급 — 앱이 처음 실행할 때 (앱 키가 아직 없다)
+                if (!prod) {
+                    auth.requestMatchers(SWAGGER_PATHS).permitAll();   // Swagger — 운영(prod)은 열지 않는다 (yml 에서도 끈다)
+                }
+                auth.requestMatchers("/api/web/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/web/v1/member/terms").hasAnyRole("PENDING", "USER", "ADMIN")   // 가입 마치기 · 바뀐 약관 다시 동의
                 .requestMatchers(HttpMethod.DELETE, "/api/web/v1/member").hasAnyRole("PENDING", "USER", "ADMIN")       // 탈퇴 — 개정 약관에 동의하지 않아도 탈퇴할 수 있다 (약관 제13조)
                 .requestMatchers("/api/web/v1/member/**").hasAnyRole("USER", "ADMIN")   // 내 정보는 조회(GET)도 로그인
                 .requestMatchers(HttpMethod.GET, "/api/web/**").permitAll()             // 글 조회는 누구나
                 .requestMatchers("/api/web/**").hasAnyRole("USER", "ADMIN")             // 쓰기는 가입을 마친 회원
-                .anyRequest().authenticated())                     // 앱 API(/api/app/**)는 12. 앱 연결에서 앱 키 필터로 바꾼다
+                    .anyRequest().authenticated();                 // 앱 API(/api/app/**)는 12. 앱 연결에서 앱 키 필터로 바꾼다
+            })
             .exceptionHandling(e -> e
                 .authenticationEntryPoint(securityErrorHandler)    // 401 UNAUTHORIZED
                 .accessDeniedHandler(securityErrorHandler))        // 403 FORBIDDEN · TERMS_REQUIRED
