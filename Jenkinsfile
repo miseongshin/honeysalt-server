@@ -10,6 +10,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-07        shinm              최초 생성
+ * 2026-11-10        shinm              앱 로그 크기 제한 (10MB × 5)
  */
 pipeline {
     agent any
@@ -43,7 +44,8 @@ pipeline {
             steps {
                 // (앱 컨테이너를 지우고 기존이미지 연결을 끊고 새 이미지로 다시 띄운다) (지울 컨테이너가 없어도 멈추지 않게 || true)
                 sh 'docker rm -f honeysalt-server || true'
-                sh 'docker run -d --name honeysalt-server --restart unless-stopped --network honeysalt-net -p 127.0.0.1:8080:8080 -v /opt/honeysalt/config:/app/config:ro --env-file /opt/honeysalt/.env -e SPRING_PROFILES_ACTIVE=prod honeysalt-server'
+                // 앱 로그(docker logs)는 10MB 씩 5개까지만 둔다 — 회원 번호가 찍히는 로그가 끝없이 쌓이지 않게
+                sh 'docker run -d --name honeysalt-server --restart unless-stopped --network honeysalt-net -p 127.0.0.1:8080:8080 --log-opt max-size=10m --log-opt max-file=5 -v /opt/honeysalt/config:/app/config:ro --env-file /opt/honeysalt/.env -e SPRING_PROFILES_ACTIVE=prod honeysalt-server'
             }
         }
 
