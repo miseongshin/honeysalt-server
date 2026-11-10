@@ -1,6 +1,7 @@
 package com.honeysaltlove.domain.member.entity;
 
 import com.honeysaltlove.global.common.BaseTimeEntity;
+import com.honeysaltlove.global.common.Lang;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,10 +26,12 @@ import java.time.Instant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
+ * 2026-11-10        shinm              서비스(service) · 언어(lang) 추가 — 꿀방울 약관도 담는다
  */
 @Getter
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(name = "uk_terms_type_version", columnNames = {"type", "version"}))
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_terms_service_type_lang_version",
+        columnNames = {"service", "type", "lang", "version"}))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Terms extends BaseTimeEntity {
 
@@ -39,7 +42,14 @@ public class Terms extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    private ServiceType service;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private TermsType type;
+
+    @Column(nullable = false, length = 20)
+    private Lang lang;                         // 약관 언어 · DB 에는 ko · en … (LangConverter)
 
     @Column(nullable = false, length = 20)
     private String version;                    // 예: 2026-11
@@ -53,8 +63,11 @@ public class Terms extends BaseTimeEntity {
     @Column(name = "effective_at", nullable = false)
     private Instant effectiveAt;               // 시행일
 
-    private Terms(TermsType type, String version, String body, boolean required, Instant effectiveAt) {
+    private Terms(ServiceType service, TermsType type, Lang lang, String version, String body,
+                  boolean required, Instant effectiveAt) {
+        this.service = service;
         this.type = type;
+        this.lang = lang;
         this.version = version;
         this.body = body;
         this.required = required;
@@ -66,8 +79,9 @@ public class Terms extends BaseTimeEntity {
      * @author shinm
      * @since 2026-11-04
      */
-    public static Terms create(TermsType type, String version, String body, boolean required, Instant effectiveAt) {
-        return new Terms(type, version, body, required, effectiveAt);
+    public static Terms create(ServiceType service, TermsType type, Lang lang, String version, String body,
+                               boolean required, Instant effectiveAt) {
+        return new Terms(service, type, lang, version, body, required, effectiveAt);
     }
 
     /**

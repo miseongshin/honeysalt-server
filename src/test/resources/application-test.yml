@@ -9,6 +9,8 @@ spring:
   jackson:
     time-zone: UTC
     default-property-inclusion: non_null
+  flyway:
+    placeholder-replacement: false            # V 파일의 JSON 에 있는 ${ 를 설정값 자리로 읽지 않게 (application.yml 과 같게)
   jpa:
     open-in-view: false
     hibernate:

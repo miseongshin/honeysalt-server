@@ -1,5 +1,6 @@
 package com.honeysaltlove.domain.member.entity;
 
+import com.honeysaltlove.global.common.Lang;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class TermsTest {
     @DisplayName("시행 전 초안은 고칠 수 있다")
     void editBeforeEffective() {
         // given
-        Terms terms = Terms.create(TermsType.SERVICE, "2026-12", "초안", true, effective);
+        Terms terms = Terms.create(ServiceType.HONEYSALTLOVE, TermsType.SERVICE, Lang.KO, "2026-12", "초안", true, effective);
 
         // when
         terms.editDraft("고친 초안", effective, Instant.parse("2026-11-20T00:00:00Z"));
@@ -39,7 +40,7 @@ class TermsTest {
     @DisplayName("시행된 약관은 고칠 수 없다")
     void editAfterEffective() {
         // given
-        Terms terms = Terms.create(TermsType.SERVICE, "2026-12", "본문", true, effective);
+        Terms terms = Terms.create(ServiceType.HONEYSALTLOVE, TermsType.SERVICE, Lang.KO, "2026-12", "본문", true, effective);
 
         // when · then
         assertThatThrownBy(() -> terms.editDraft("바꾼 본문", effective, Instant.parse("2026-12-02T00:00:00Z")))

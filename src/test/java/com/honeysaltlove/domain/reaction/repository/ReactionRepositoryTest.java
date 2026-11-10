@@ -156,15 +156,16 @@ class ReactionRepositoryTest {
     void complaint() {
         // given
         Member second = memberRepository.save(Member.join(Provider.GOOGLE, "g-reaction3", "반응테스트3", Lang.KO));
-        complaintRepository.save(HoneyComplaint.report(member, TargetType.ACTIVITY, activity.getId(), ComplaintReason.AD, null));
-        complaintRepository.save(HoneyComplaint.report(second, TargetType.ACTIVITY, activity.getId(), ComplaintReason.ETC, "이상한 링크"));
+        Member writer = memberRepository.save(Member.join(Provider.GOOGLE, "g-reaction4", "반응테스트4", Lang.KO));
+        complaintRepository.save(HoneyComplaint.report(member, writer, TargetType.ACTIVITY, activity.getId(), ComplaintReason.AD, null));
+        complaintRepository.save(HoneyComplaint.report(second, writer, TargetType.ACTIVITY, activity.getId(), ComplaintReason.ETC, "이상한 링크"));
         em.flush();
 
         // when · then
         assertThat(complaintRepository.countByTargetTypeAndTargetId(TargetType.ACTIVITY, activity.getId())).isEqualTo(2);
         assertThat(complaintRepository.findByHandledAtIsNullOrderByCreatedAtAsc()).hasSize(2);
         assertThatThrownBy(() -> complaintRepository.saveAndFlush(
-                HoneyComplaint.report(member, TargetType.ACTIVITY, activity.getId(), ComplaintReason.ABUSE, null)))
+                HoneyComplaint.report(member, writer, TargetType.ACTIVITY, activity.getId(), ComplaintReason.ABUSE, null)))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

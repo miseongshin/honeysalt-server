@@ -37,6 +37,7 @@ import java.util.Set;
  * -----------------------------------------------------------
  * 2026-11-04        shinm              최초 생성
  * 2026-11-06        shinm              태그 연결 (member_tag)
+ * 2026-11-10        shinm              탈퇴 (status · withdrawnAt · withdraw) — 개인정보처리방침대로 탈퇴하면 바로 비운다
  */
 @Getter
 @Entity
@@ -53,11 +54,11 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private Provider provider;
 
-    @Column(name = "provider_uid", nullable = false, length = 100)
-    private String providerUid;                // provider와 조합한 값이 중복되면 안 된다 (UK)
+    @Column(name = "provider_uid", length = 100)
+    private String providerUid;                // provider와 조합한 값이 중복되면 안 된다 (UK) · 탈퇴하면 null
 
-    @Column(nullable = false, length = 12, unique = true)
-    private String nickname;                   // 2~12자 (시안의 닉네임 규칙)
+    @Column(length = 12, unique = true)
+    private String nickname;                   // 2~12자 (시안의 닉네임 규칙) · 탈퇴하면 null
 
     @Column(name = "birth_year")
     private Integer birthYear;
@@ -69,8 +70,15 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status;
+
+    @Column(name = "withdrawn_at")
+    private Instant withdrawnAt;               // 탈퇴일
+
     @Column(name = "last_login_at")
-    private Instant lastLoginAt;               // 휴면 판단
+    private Instant lastLoginAt;               // 마지막 로그인 · 탈퇴하면 null
 
     @ManyToMany
     @JoinTable(name = "member_tag",
@@ -84,6 +92,7 @@ public class Member extends BaseTimeEntity {
         this.nickname = nickname;
         this.lang = lang;
         this.role = Role.USER;
+        this.status = MemberStatus.ACTIVE;
     }
 
     /**
@@ -124,5 +133,22 @@ public class Member extends BaseTimeEntity {
     public void replaceTags(Set<Tag> newTags) {
         tags.retainAll(newTags);   // clear() 를 쓰면 자기 tags 를 넘겼을 때 모두 사라진다
         tags.addAll(newTags);
+    }
+
+    /**
+     * 탈퇴한다. 이 행의 개인정보(소셜 회원번호 · 닉네임 · 출생연도 · 마지막 로그인)를 비우고 내 정보 태그를 지운다
+     * 회원 행은 남은 글 · 좋아요 · 신고 기록이 가리켜서 남긴다
+     * 닉네임 백업 · 활동 바구니 · 의견 · 약관 동의 기록 · 앱 연결은 호출한 서비스가 같은 트랜잭션에서 삭제한다
+     * @author shinm
+     * @since 2026-11-10
+     */
+    public void withdraw(Instant now) {
+        this.status = MemberStatus.WITHDRAWN;
+        this.withdrawnAt = now;
+        this.providerUid = null;
+        this.nickname = null;
+        this.birthYear = null;
+        this.lastLoginAt = null;
+        this.tags.clear();
     }
 }

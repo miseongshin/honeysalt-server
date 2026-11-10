@@ -33,6 +33,7 @@ import java.time.Instant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-06        shinm              최초 생성
+ * 2026-11-10        shinm              신고 대상 회원(reportedMember) 추가 — 글이 지워져도 반복 신고를 확인 · 신고일부터 1년 보관
  */
 @Getter
 @Entity
@@ -48,7 +49,11 @@ public class HoneyComplaint extends BaseCreatedEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private Member member;                     // 신고한 회원
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "reported_member_id", nullable = false)
+    private Member reportedMember;             // 신고 대상 회원 (글쓴이)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, length = 20)
@@ -72,10 +77,11 @@ public class HoneyComplaint extends BaseCreatedEntity {
      * @author shinm
      * @since 2026-11-06
      */
-    public static HoneyComplaint report(Member member, TargetType targetType, Long targetId,
+    public static HoneyComplaint report(Member member, Member reportedMember, TargetType targetType, Long targetId,
                                         ComplaintReason reason, String complaintText) {
         HoneyComplaint c = new HoneyComplaint();
         c.member = member;
+        c.reportedMember = reportedMember;
         c.targetType = targetType;
         c.targetId = targetId;
         c.reason = reason;

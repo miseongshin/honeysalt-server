@@ -4,6 +4,7 @@ import com.honeysaltlove.domain.member.entity.Member;
 import com.honeysaltlove.domain.member.entity.MemberNicknameHistory;
 import com.honeysaltlove.domain.member.entity.MemberTermsHistory;
 import com.honeysaltlove.domain.member.entity.Provider;
+import com.honeysaltlove.domain.member.entity.ServiceType;
 import com.honeysaltlove.domain.member.entity.Terms;
 import com.honeysaltlove.domain.member.entity.TermsType;
 import com.honeysaltlove.global.common.Lang;
@@ -70,6 +71,23 @@ class MemberRepositoryTest {
     }
 
     @Test
+    @DisplayName("탈퇴하면 개인정보가 비워지고, 같은 소셜 계정 · 닉네임으로 다시 가입할 수 있다")
+    void withdrawThenJoinAgain() {
+        // given
+        Member old = memberRepository.saveAndFlush(newMember("g-5", "다시온벌"));
+
+        // when
+        old.withdraw(Instant.parse("2026-11-10T00:00:00Z"));
+        memberRepository.saveAndFlush(old);
+        Member again = memberRepository.saveAndFlush(newMember("g-5", "다시온벌"));
+
+        // then
+        assertThat(old.getProviderUid()).isNull();
+        assertThat(old.getNickname()).isNull();
+        assertThat(again.getId()).isNotEqualTo(old.getId());
+    }
+
+    @Test
     @DisplayName("닉네임은 겹칠 수 없다")
     void sameNickname() {
         // given
@@ -102,7 +120,8 @@ class MemberRepositoryTest {
         // given
         Member member = memberRepository.saveAndFlush(newMember("g-6", "약관동의"));
         Terms terms = termsRepository.saveAndFlush(
-                Terms.create(TermsType.SERVICE, "test-2026-11", "이용약관", true, Instant.parse("2026-11-01T00:00:00Z")));
+                Terms.create(ServiceType.HONEYSALTLOVE, TermsType.SERVICE, Lang.KO, "test-2026-11", "이용약관", true,
+                        Instant.parse("2026-11-01T00:00:00Z")));
         termsHistoryRepository.saveAndFlush(MemberTermsHistory.agree(member, terms));
 
         // when · then
