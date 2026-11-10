@@ -79,7 +79,7 @@
 
 1. [ ] 로그인을 만든다 (진행표 6. 로그인). 로그인 화면은 honeysalt-vue 의 7. 로그인 화면에서 따로 만든다.
     - [x] 미리 할 것: Google Cloud 에서 OAuth 클라이언트를 만들고 리디렉션 주소(운영 · 로컬)를 등록한다. client-id 와 secret 은 `ENC(...)` 로 바꿔 yml 에 넣는다 (git 밖). 약관 첫 버전(`terms` 기본 데이터)을 준비한다. (2026-11-10 · 꿀방울 약관은 V6 · honeysaltlove 약관은 문서를 확정했고 기본 데이터는 아래 약관 항목에서 넣는다)
-    - [ ] 약관: honeysaltlove 이용약관과 개인정보처리방침을 쓰고 `terms` 기본 데이터로 넣는다. 가입할 때 필수 약관에 동의를 받고 `member_terms_history` 에 남긴다. 약관이 개정되면 시행일 이후 처음 로그인할 때 다시 동의를 받는다. (2026-11-10 문서 확정 · 시행일 2026-12-07 임시 · 기본 데이터 V7 과 동의 API 가 남았다)
+    - [ ] 약관: honeysaltlove 이용약관과 개인정보처리방침을 쓰고 `terms` 기본 데이터로 넣는다. 가입할 때 필수 약관에 동의를 받고 `member_terms_history` 에 남긴다. 약관이 개정되면 시행일 이후 처음 로그인할 때 다시 동의를 받는다. (2026-11-10 문서 확정 · 시행일 2026-12-07 임시 · 기본 데이터 V7 · 약관 조회 `GET /api/web/v1/terms` 끝 — 동의 API `POST /api/web/v1/member/terms` 가 남았다) · 개정할 때는 같은 버전을 모든 언어에 함께 넣는다 (요청한 언어의 약관이 하나도 없을 때만 한국어로 바꾸므로, 한 언어에만 넣으면 언어마다 다른 버전이 나간다)
     - [x] 구글 로그인: `spring-boot-starter-oauth2-client` 를 붙인다. `provider` 와 `provider_uid` 로 회원을 찾고, 있으면 `last_login_at` 을 갱신한다. 없으면 가입 대기로 두고 약관 · 닉네임 화면으로 보낸다. (2026-11-10 · 가입 대기는 `ROLE_PENDING` · 로그인 · 실패를 로그로 남긴다 — 회원 번호만, 소셜 회원번호는 남기지 않는다)
     - [x] Security: 웹 API(`/api/web/**`)는 세션으로, 앱 API(`/api/app/**`)는 앱 키로 인증한다. 조회(GET)는 누구나, 쓰기는 USER, 관리자 API(`/admin/**`)는 ADMIN 만 쓸 수 있다. 가입을 덜 마친 회원에게는 `TERMS_REQUIRED` 를 보낸다. 401 · 403 도 응답 형식에 맞춰 보낸다. (2026-11-10 · 앱 키 인증은 12. 앱 연결에서 만든다)
     - [x] CORS: `https://honeysaltlove.com` 과 `http://localhost:3000` 을 허용하고, 쿠키를 실어 보낼 수 있게 `allowCredentials` 를 켠다. (2026-11-10 · 허용 주소는 환경마다 `app.front-url` 하나)
@@ -95,7 +95,7 @@
 
 ### 1. 공통
 
-1. [ ] 기본 데이터: 태그 목록이 정해지면 `tag` 기본 데이터를 새 V 파일로 넣는다. (약관 `terms` 기본 데이터는 6. 로그인의 약관 항목에서 넣는다)
+1. [ ] 기본 데이터: 태그 목록이 정해지면 `tag` 기본 데이터를 새 V 파일로 넣는다. (약관 `terms` 기본 데이터는 6. 로그인에서 넣었다 — V6 꿀방울 · V7 honeysaltlove)
 2. [ ] 공통 응답 · 오류: 5절에서 정한 응답 형식과 오류 code 목록을 코드로 만든다. 클래스 이름은 java-coding-guide 를 따른다 (`ApiResponse<T>`, `ResultCode`, `BusinessException`, `@RestControllerAdvice`).
 3. [ ] Swagger: `springdoc-openapi` 를 붙인다. local 에서만 켜고, `application-prod.yml` 에서는 끈다.
 4. [ ] 엔티티 규칙 확인: 엔티티를 다 만든 뒤 9절 맨 끝에 한 번 더 확인한다. 연관은 모두 `LAZY`, enum 은 `@Enumerated(STRING)` 이고, 값은 setter 없이 이름 있는 메서드로만 바꾼다 (예: `hide("AI: 광고")`).
