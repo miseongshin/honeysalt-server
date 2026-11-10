@@ -59,6 +59,17 @@ public class TermsService {
         return current;
     }
 
+    /**
+     * 회원 가입에 동의해야 하는 honeysaltlove 필수 약관 (지금 보여 줄 버전)
+     * @author shinm
+     * @since 2026-11-10
+     */
+    public List<Terms> findCurrentRequired(Instant now) {
+        return findCurrent(ServiceType.HONEYSALTLOVE, Lang.KO, now).stream()
+                .filter(Terms::isRequired)
+                .toList();
+    }
+
     private Terms pick(List<Terms> newestFirst, Instant now) {
         return newestFirst.stream()
                 .filter(t -> !t.getEffectiveAt().isAfter(now))

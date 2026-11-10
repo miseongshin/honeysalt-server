@@ -15,6 +15,7 @@ import java.util.Map;
  * <pre>
  * - 가입한 회원: memberId 가 있고 권한은 ROLE_USER · ROLE_ADMIN
  * - 가입 대기(처음 온 사람): memberId 가 null 이고 권한은 ROLE_PENDING — 약관 동의 · 닉네임을 마치면 회원이 된다
+ * - 다시 동의 대기(개정된 약관에 아직 동의하지 않은 회원): memberId 가 있고 권한은 ROLE_PENDING
  * - provider · providerUid 는 가입을 마칠 때 회원을 만들려고 들고 있다 · 로그에 남기지 않는다
  * </pre>
  *
@@ -24,6 +25,7 @@ import java.util.Map;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-10        shinm              최초 생성
+ * 2026-11-10        shinm              isPending 은 권한으로 본다 (다시 동의 대기 포함)
  */
 @Getter
 public class LoginMember implements OidcUser {
@@ -44,12 +46,12 @@ public class LoginMember implements OidcUser {
     }
 
     /**
-     * 가입을 아직 마치지 않았는지
+     * 약관 동의가 필요한지 — 가입 대기 · 다시 동의 대기 (화면을 가입 마치기로 보낸다)
      * @author shinm
      * @since 2026-11-10
      */
     public boolean isPending() {
-        return memberId == null;
+        return authorities.stream().anyMatch(a -> "ROLE_PENDING".equals(a.getAuthority()));
     }
 
     /**
@@ -57,7 +59,7 @@ public class LoginMember implements OidcUser {
      */
     @Override
     public String getName() {
-        return isPending() ? "pending" : String.valueOf(memberId);
+        return memberId == null ? "pending" : String.valueOf(memberId);
     }
 
     @Override

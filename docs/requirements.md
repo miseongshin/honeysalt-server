@@ -79,16 +79,16 @@
 
 1. [ ] 로그인을 만든다 (진행표 6. 로그인). 로그인 화면은 honeysalt-vue 의 7. 로그인 화면에서 따로 만든다.
     - [x] 미리 할 것: Google Cloud 에서 OAuth 클라이언트를 만들고 리디렉션 주소(운영 · 로컬)를 등록한다. client-id 와 secret 은 `ENC(...)` 로 바꿔 yml 에 넣는다 (git 밖). 약관 첫 버전(`terms` 기본 데이터)을 준비한다. (2026-11-10 · 꿀방울 약관은 V6 · honeysaltlove 약관은 문서를 확정했고 기본 데이터는 아래 약관 항목에서 넣는다)
-    - [ ] 약관: honeysaltlove 이용약관과 개인정보처리방침을 쓰고 `terms` 기본 데이터로 넣는다. 가입할 때 필수 약관에 동의를 받고 `member_terms_history` 에 남긴다. 약관이 개정되면 시행일 이후 처음 로그인할 때 다시 동의를 받는다. (2026-11-10 문서 확정 · 시행일 2026-12-07 임시 · 기본 데이터 V7 · 약관 조회 `GET /api/web/v1/terms` 끝 — 동의 API `POST /api/web/v1/member/terms` 가 남았다) · 개정할 때는 같은 버전을 모든 언어에 함께 넣는다 (요청한 언어의 약관이 하나도 없을 때만 한국어로 바꾸므로, 한 언어에만 넣으면 언어마다 다른 버전이 나간다)
+    - [x] 약관: honeysaltlove 이용약관과 개인정보처리방침을 쓰고 `terms` 기본 데이터로 넣는다. 가입할 때 필수 약관에 동의를 받고 `member_terms_history` 에 남긴다. 약관이 개정되면 시행일 이후 처음 로그인할 때 다시 동의를 받는다. (2026-11-10 · 시행일 2026-12-07 임시 · V7 · `GET /api/web/v1/terms` · `POST /api/web/v1/member/terms` — 처음 온 사람은 가입 마치기 화면 `/signup`, 다시 동의할 회원은 약관 동의 화면 `/terms/agree` 로 보낸다 · 동시에 두 번 보내거나 닉네임이 동시에 겹치면 409 DUPLICATE) · 개정할 때는 같은 버전을 모든 언어에 함께 넣는다 (요청한 언어의 약관이 하나도 없을 때만 한국어로 바꾸므로, 한 언어에만 넣으면 언어마다 다른 버전이 나간다)
     - [x] 구글 로그인: `spring-boot-starter-oauth2-client` 를 붙인다. `provider` 와 `provider_uid` 로 회원을 찾고, 있으면 `last_login_at` 을 갱신한다. 없으면 가입 대기로 두고 약관 · 닉네임 화면으로 보낸다. (2026-11-10 · 가입 대기는 `ROLE_PENDING` · 로그인 · 실패를 로그로 남긴다 — 회원 번호만, 소셜 회원번호는 남기지 않는다)
     - [x] Security: 웹 API(`/api/web/**`)는 세션으로, 앱 API(`/api/app/**`)는 앱 키로 인증한다. 조회(GET)는 누구나, 쓰기는 USER, 관리자 API(`/admin/**`)는 ADMIN 만 쓸 수 있다. 가입을 덜 마친 회원에게는 `TERMS_REQUIRED` 를 보낸다. 401 · 403 도 응답 형식에 맞춰 보낸다. (2026-11-10 · 앱 키 인증은 12. 앱 연결에서 만든다)
     - [x] CORS: `https://honeysaltlove.com` 과 `http://localhost:3000` 을 허용하고, 쿠키를 실어 보낼 수 있게 `allowCredentials` 를 켠다. (2026-11-10 · 허용 주소는 환경마다 `app.front-url` 하나)
     - [x] CSRF: 토큰을 쿠키로 주고(`CookieCsrfTokenRepository`, 쿠키 도메인 `.honeysaltlove.com`) 화면이 `X-XSRF-TOKEN` 헤더로 다시 보낸다. 앱 API(`/api/app/**`)는 쿠키를 쓰지 않으므로 끈다. (2026-11-10)
     - [x] 세션 쿠키: `HttpOnly` · `Secure` · `SameSite=Lax` 로 둔다. (2026-11-10 · 이름 `SESSION` · `Secure` 는 운영만)
     - [ ] API: 설계서 4.1 의 1) 로그인 · 회원 표를 만든다 (`GET /api/web/v1/terms` · `POST /api/web/v1/member/terms` · `GET · PATCH · DELETE /api/web/v1/member` · `GET /api/web/v1/member/posts` · `POST /api/web/v1/logout`).
-    - [ ] 닉네임: 2~12자이고 띄어쓰기를 넣을 수 없다. 비워 두면 자동으로 만든다. 바꾸면 전 이름을 `member_nickname_history` 에 남긴다.
+    - [ ] 닉네임: 2~12자이고 띄어쓰기를 넣을 수 없다. 비워 두면 자동으로 만든다. 바꾸면 전 이름을 `member_nickname_history` 에 남긴다. (2026-11-10 · 규칙 검사와 자동 생성은 끝 — 꾸밈말 + 장소 · 때 + 꿀 낱말 조합, 숫자 없이 · 바꾸기는 `PATCH /api/web/v1/member` 에서 만든다)
     - [ ] 앱 키 발급(`POST /api/app/v1/keys`): 비밀값은 처음 발급할 때 한 번만 보여 주고, 서버에는 해시만 저장한다.
-    - [ ] 테스트: 로그인, 가입 마치기, 권한(남의 글 수정 · 일반 회원의 관리자 API 는 403), CSRF 토큰 없는 POST(403), 탈퇴를 확인한다. (2026-11-10 · 로그인 · 관리자 API 403 · 가입 대기 403 · CSRF 403 · CORS 는 끝 — 가입 마치기 · 남의 글 수정 · 탈퇴 API 가 남았다)
+    - [ ] 테스트: 로그인, 가입 마치기, 권한(남의 글 수정 · 일반 회원의 관리자 API 는 403), CSRF 토큰 없는 POST(403), 탈퇴를 확인한다. (2026-11-10 · 로그인 · 관리자 API 403 · 가입 대기 403 · CSRF 403 · CORS · 가입 마치기는 끝 — 남의 글 수정 · 탈퇴 API 가 남았다)
     - [x] 정할 것: 탈퇴할 때 내가 만든 활동을 어떻게 할지, 세션을 메모리와 DB 중 어디에 둘지, 관리자를 어떻게 지정할지(추천: DB 에서 role 을 직접 바꾼다), 닉네임 중복을 허용할지, 로그인 뒤 어느 화면으로 돌아갈지 정한다. (2026-11-10 정함 — 탈퇴한 회원의 활동은 글처럼 남긴다 · 세션은 서버 메모리 · 관리자는 DB 에서 role 을 직접 바꾼다 · 닉네임 중복은 허용하지 않는다 · 로그인 뒤 회원은 첫 화면, 가입 대기는 가입 마치기 화면)
 
 ## 9. API
