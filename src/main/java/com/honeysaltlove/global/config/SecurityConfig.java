@@ -35,7 +35,7 @@ import java.util.List;
  * 2026-11-10        shinm              권한 나누기 · 401 · 403 을 { status, code, message } 로
  * 2026-11-10        shinm              CORS · CSRF(쿠키 → X-XSRF-TOKEN 헤더) · 앱 API 는 CSRF 제외
  * 2026-11-10        shinm              로그아웃 POST /api/web/v1/logout
- * 2026-11-10        shinm              다시 동의할 회원도 탈퇴할 수 있게
+ * 2026-11-10        shinm              다시 동의할 회원도 탈퇴할 수 있게 · 앱 키 발급은 로그인 없이
  */
 @Configuration
 @RequiredArgsConstructor
@@ -64,6 +64,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth                    // 위에서부터 먼저 맞는 줄이 적용된다
                 .requestMatchers("/actuator/health").permitAll()   // nginx · 배포 후 서버 정상 여부 확인
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()   // 없는 주소가 401 이 아니라 404 로 가게 (오류 응답은 막지 않는다)
+                .requestMatchers(HttpMethod.POST, "/api/app/v1/keys").permitAll()   // 앱 키 발급 — 앱이 처음 실행할 때 (앱 키가 아직 없다)
                 .requestMatchers("/api/web/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/web/v1/member/terms").hasAnyRole("PENDING", "USER", "ADMIN")   // 가입 마치기 · 바뀐 약관 다시 동의
                 .requestMatchers(HttpMethod.DELETE, "/api/web/v1/member").hasAnyRole("PENDING", "USER", "ADMIN")       // 탈퇴 — 개정 약관에 동의하지 않아도 탈퇴할 수 있다 (약관 제13조)
@@ -88,7 +89,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository())        // 토큰을 XSRF-TOKEN 쿠키로 준다 → 화면이 X-XSRF-TOKEN 헤더로 다시 보낸다
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())   // 쿠키 값 그대로 비교 (화면이 읽은 값)
-                .ignoringRequestMatchers("/api/app/**"))           // 앱 API 는 쿠키 대신 Authorization 헤더로 인증해서 CSRF 를 쓰지 않는다
+                .ignoringRequestMatchers("/api/app/**"))           // 앱 API 는 쿠키 대신 앱 키 헤더(X-App-Key · Authorization: Bearer)로 인증해서 CSRF 를 쓰지 않는다
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
         return http.build();
     }
