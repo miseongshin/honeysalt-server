@@ -71,7 +71,7 @@ public class MemberAppKey extends BaseTimeEntity {
     }
 
     /**
-     * 웹 계정과 연결한다 (앱이 보여 준 연결 코드를 웹 내 계정에 넣었을 때)
+     * 웹 계정과 연결한다 (앱이 웹에서 받은 1회용 연결 토큰으로 연결을 요청했을 때)
      * @author shinm
      * @since 2026-11-06
      */
