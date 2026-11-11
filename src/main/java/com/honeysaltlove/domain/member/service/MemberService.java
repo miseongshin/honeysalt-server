@@ -44,13 +44,15 @@ import java.util.Set;
  * -----------------------------------------------------------
  * 2026-11-10        shinm              최초 생성
  * 2026-11-10        shinm              내 정보 · 수정 · 탈퇴
+ * 2026-11-11        shinm              자동 닉네임이 50번 겹치면 뒤에 1, 2, 3 … 을 붙여 빈 이름까지 (가입이 막히지 않게)
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
 
-    private static final int NICKNAME_TRIES = 10;
+    private static final int NICKNAME_TRIES = 50;   // 자동 닉네임을 다시 뽑는 횟수 · 모두 겹치면 숫자를 붙인다
+    private static final int NICKNAME_MAX = 12;   // 닉네임 2~12자 (TermsAgreeRequest · MemberUpdateRequest 와 같다)
     private static final int MIN_AGE = 14;     // 만 14세 미만은 가입할 수 없다
 
     private final MemberRepository memberRepository;
@@ -224,8 +226,20 @@ public class MemberService {
                 return nickname;
             }
         }
-        // 열 번 모두 겹치는 드문 경우 — 숫자 두 자리를 붙인다 (그래도 겹치면 저장할 때 409 DUPLICATE)
+        // 50번 모두 겹치는 드문 경우 — 가입이 막히지 않게 이름 뒤에 1, 2, 3 … 을 붙여 빈 이름이 나올 때까지 본다
+        // 12자를 넘으면(이름 9자 + 네 자리) 새 이름을 뽑아 1 부터 다시 센다
         log.warn("auto nickname collided {} times — appending number", NICKNAME_TRIES);
-        return nicknameGenerator.generateWithNumber();
+        String base = nicknameGenerator.generate();
+        for (int n = 1; ; n++) {
+            String nickname = base + n;
+            if (nickname.length() > NICKNAME_MAX) {
+                base = nicknameGenerator.generate();
+                n = 0;
+                continue;
+            }
+            if (!memberRepository.existsByNickname(nickname)) {
+                return nickname;
+            }
+        }
     }
 }
