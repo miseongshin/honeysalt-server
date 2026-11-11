@@ -85,7 +85,7 @@ public class Member extends BaseTimeEntity {
     @JoinTable(name = "member_tag",
             joinColumns = @JoinColumn(name = "member_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private Set<Tag> tags = new HashSet<>();   // 맞춤설정에서 고른 회원 태그
+    private Set<Tag> tags = new HashSet<>();   // 대표태그로 고른 회원 태그
 
     private Member(Provider provider, String providerUid, String nickname, Lang lang) {
         this.provider = provider;

@@ -1,8 +1,8 @@
 package com.honeysaltlove.domain.tag.entity;
 
 /**
- * 회원 태그 묶음 — 맞춤설정 화면에 보이는 묶음. 선언 순서 = 화면 순서
- * 묶음 이름(원하는 변화 · 직업 …)은 Vue 번역 파일에 · 묶음을 바꿔도 태그 행은 그대로다(tag_group 값만 바꾼다)
+ * 회원 태그 묶음 — 마이페이지 「나의 대표태그」 탭. 선언 순서 = 화면 순서
+ * 묶음 이름(관심사 · 신체 활동 …)은 Vue 에 · 묶음을 바꿔도 태그 행은 그대로다(tag_group 값만 바꾼다)
  *
  * @author shinm
  * @since 2026-11-06
@@ -10,19 +10,12 @@ package com.honeysaltlove.domain.tag.entity;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-11-06        shinm              최초 생성
+ * 2026-11-11        shinm              대표태그 탭 다섯 묶음으로 바꿈
  */
 public enum TagGroup {
-    GOAL,               // 원하는 변화
-    LIFE_EVENT,         // 겪고 있는 일 (직장 갈등 · 가족 문제 …)
-    OCCUPATION,         // 직업 · 일상 환경
-    PERSONALITY_TYPE,   // 성격 유형 A · B · C · D
-    SOCIAL_STYLE,       // 사람과 함께하는 정도
-    PLANNING_STYLE,     // 계획을 세우는 방식
-    ACTIVITY_STYLE,     // 선호하는 활동 방식
-    WITH,               // 함께하는 대상
-    LEVEL,              // 지금 가능한 활동 강도
-    TIME,               // 가능한 시간
-    PAIN,               // 통증 · 신체 제약
-    INTEREST,           // 관심 주제
-    RHYTHM              // 생활 리듬
+    INTEREST,           // 관심사
+    MOVEMENT,           // 신체 활동 (헬스 · 러닝 · 움직임 × 상 · 중 · 하)
+    RHYTHM,             // 생활리듬 (아침형 · 중간형 · 저녁형)
+    PERSONALITY_TYPE,   // 성격유형 A · B · C · D
+    MBTI                // MBTI — 뚜렷한 글자만 (E · I · S · N · T · F · J · P)
 }

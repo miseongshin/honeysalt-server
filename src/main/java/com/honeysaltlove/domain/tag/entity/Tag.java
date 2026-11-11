@@ -24,7 +24,7 @@ import java.util.Locale;
  *   - 기호는 받지 않는다: C++ · C# · C 는 모두 c 로 합쳐진다 (+ · # 를 받으면 "광고+" 로 차단을 피할 수 있어서)
  *   - 정규화 뒤 빈 이름("#!!!" · 이모지만)은 서비스에서 거부한다
  * - #상황 태그: 사용자가 글에 #으로 만든다 · 묶음 없음
- * - 회원 태그: 운영자가 맞춤설정 묶음(TagGroup)에 넣는다 · 같은 이름이면 #상황 태그와 같은 태그다
+ * - 회원 태그: 운영자가 대표태그 묶음(TagGroup)에 넣는다 · 같은 이름이면 #상황 태그와 같은 태그다
  * - 언어(lang)는 처음 만든 사람의 언어 · 기록만 하고 중복 기준이나 조회 조건으로 쓰지 않는다
  * - 이름은 50자까지 저장한다 (작성 시 한국어 · 중국어 · 일본어는 10자, 그 외 언어는 20자 — 검증은 서비스에서)
  * - 사용 횟수(useCount)는 스케줄러가 1시간마다 공개 글만 세어 값을 갱신한다
@@ -49,7 +49,7 @@ public class Tag extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tag_group", length = 20)
-    private TagGroup tagGroup;                 // 맞춤설정 묶음 · #상황 태그는 null
+    private TagGroup tagGroup;                 // 대표태그 묶음 · #상황 태그는 null
 
     @Column(length = 20)
     private Lang lang;                         // 처음 만든 사람의 언어 · 기록만
@@ -105,7 +105,7 @@ public class Tag extends BaseTimeEntity {
     }
 
     /**
-     * 회원 태그를 만든다. 운영자가 맞춤설정 묶음에 넣는다
+     * 회원 태그를 만든다. 운영자가 대표태그 묶음에 넣는다
      * @author shinm
      * @since 2026-11-06
      */
@@ -116,7 +116,7 @@ public class Tag extends BaseTimeEntity {
     }
 
     /**
-     * 맞춤설정 묶음을 바꾼다. null 이면 묶음에서 뺀다 (#상황 태그로)
+     * 대표태그 묶음을 바꾼다. null 이면 묶음에서 뺀다 (#상황 태그로)
      * @author shinm
      * @since 2026-11-06
      */

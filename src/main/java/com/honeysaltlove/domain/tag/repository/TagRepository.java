@@ -32,5 +32,5 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
 
     List<Tag> findTop5ByOrderByUseCountDesc();                   // 많이 찾는 상황 · 묶음 · 언어와 상관없이 · 인덱스: ix_tag_popular
 
-    List<Tag> findByTagGroupOrderByIdAsc(TagGroup tagGroup);     // 맞춤설정 묶음 목록
+    List<Tag> findByTagGroupOrderByIdAsc(TagGroup tagGroup);     // 대표태그 묶음 목록
 }

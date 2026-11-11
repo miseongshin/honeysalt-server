@@ -46,7 +46,7 @@ class TagRepositoryTest {
     @DisplayName("이름이 같은 태그는 다시 등록할 수 없다 (묶음 · 언어가 달라도)")
     void duplicateName() {
         // given
-        tagRepository.saveAndFlush(Tag.memberTag(TagGroup.OCCUPATION, "테스트구직", Lang.KO));
+        tagRepository.saveAndFlush(Tag.memberTag(TagGroup.INTEREST, "테스트구직", Lang.KO));
 
         // when · then
         assertThatThrownBy(() -> tagRepository.saveAndFlush(Tag.create("테스트구직", Lang.EN)))
@@ -57,7 +57,7 @@ class TagRepositoryTest {
     @DisplayName("묶음을 바꿔도 태그는 한 행이고 이름으로 찾을 수 있다")
     void changeGroup() {
         // given
-        Tag tag = tagRepository.saveAndFlush(Tag.memberTag(TagGroup.LIFE_EVENT, "테스트교대근무", Lang.KO));
+        Tag tag = tagRepository.saveAndFlush(Tag.memberTag(TagGroup.INTEREST, "테스트교대근무", Lang.KO));
 
         // when
         tag.changeGroup(TagGroup.RHYTHM);

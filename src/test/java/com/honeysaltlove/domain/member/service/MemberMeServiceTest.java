@@ -65,12 +65,12 @@ class MemberMeServiceTest {
     @Autowired EntityManager em;
 
     private Member member;
-    private Tag goalTag;
+    private Tag interestTag;
 
     @BeforeEach
     void setUp() {
         member = memberRepository.saveAndFlush(Member.join(Provider.GOOGLE, "g-me", "내정보벌", Lang.KO));
-        goalTag = tagRepository.saveAndFlush(Tag.memberTag(TagGroup.GOAL, "푹자기테스트", Lang.KO));
+        interestTag = tagRepository.saveAndFlush(Tag.memberTag(TagGroup.INTEREST, "푹자기테스트", Lang.KO));
     }
 
     @Test
@@ -78,7 +78,7 @@ class MemberMeServiceTest {
     void update() {
         // when
         MemberResponse me = memberService.updateMe(member.getId(),
-                new MemberUpdateRequest("새이름벌", 1990, List.of(goalTag.getId())), NOW);
+                new MemberUpdateRequest("새이름벌", 1990, List.of(interestTag.getId())), NOW);
 
         // then
         assertThat(me.nickname()).isEqualTo("새이름벌");
@@ -134,7 +134,7 @@ class MemberMeServiceTest {
     @DisplayName("탈퇴하면 개인정보를 비우고 연결된 기록을 지우며, 앱 키는 연결만 끊는다 · 같은 계정으로 다시 가입할 수 있다")
     void withdraw() {
         // given
-        memberService.updateMe(member.getId(), new MemberUpdateRequest("바꾼이름", 1990, List.of(goalTag.getId())), NOW);
+        memberService.updateMe(member.getId(), new MemberUpdateRequest("바꾼이름", 1990, List.of(interestTag.getId())), NOW);
         termsService.findCurrentRequired(NOW).forEach(t -> termsHistoryRepository.save(MemberTermsHistory.agree(member, t)));
         cartRepository.save(Cart.put(member, CartTargetType.ACTIVITY, 1L, null));
         feedbackRepository.save(Feedback.send(member, FeedbackType.FEATURE, "의견입니다", Lang.KO));
