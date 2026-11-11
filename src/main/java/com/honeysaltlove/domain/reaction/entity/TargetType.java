@@ -13,7 +13,7 @@ package com.honeysaltlove.domain.reaction.entity;
 public enum TargetType {
     WORRY,          // 고민
     THOUGHT_TIP,    // 생각꿀팁
-    SCHEDULE,       // 꿀방울 스케줄
+    SCHEDULE,       // 꿀방울스케줄
     ACTIVITY,       // 활동
     COMMENT         // 댓글
 }

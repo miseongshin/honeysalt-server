@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * 댓글. 활동 · 꿀방울 스케줄 상세에 단다 (둘 중 하나만)
+ * 댓글. 활동 · 꿀방울스케줄 상세에 단다 (둘 중 하나만)
  * <pre>
  * - 수정할 수 있다 · 좋아요가 하나라도 있으면 수정할 수 없다 (서비스에서 honey_like 로 확인)
  * - 지우지 않고 숨긴다 (글과 같은 방식 — 작성자가 지우면 hide("본인 삭제")) · 활동 · 스케줄을 숨기면 조회할 때 같이 안 보인다
@@ -82,7 +82,7 @@ public class HoneyComment extends BaseTimeEntity {
     }
 
     /**
-     * 꿀방울 스케줄에 댓글을 단다
+     * 꿀방울스케줄에 댓글을 단다
      * @author shinm
      * @since 2026-11-06
      */

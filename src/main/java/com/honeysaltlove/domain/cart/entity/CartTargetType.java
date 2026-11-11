@@ -12,6 +12,6 @@ package com.honeysaltlove.domain.cart.entity;
  */
 public enum CartTargetType {
     THOUGHT_TIP,    // 생각꿀팁
-    SCHEDULE,       // 꿀방울 스케줄
+    SCHEDULE,       // 꿀방울스케줄
     ACTIVITY        // 활동
 }
